@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+	<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<script type="text/javascript" src="../script/lib/skin.js"></script>
+	<script>
+        skinUtil.loadSkin();
+	</script>
+	<title>登录</title>
+</head>
+
+<body class="login_bg">
+	<div class="logo"></div>
+	<div class="login_con">
+		<div class="login_info">
+			<span class="icon01"></span><input type="txt" class="name" placeholder="请输入用户名" data-i18n="placeholder.userName"/>
+		</div>
+		<div class="login_info">
+			<span class="icon02"></span><input type="password" class="pwd" placeholder="请输入密码" data-i18n="placeholder.password"/>
+		</div>
+	</div>
+	<div style="width: 100%; height: auto; overflow: hidden; position: relative; z-index: 99;">
+		<a class="login_btn login" id="loginBtn" href="#" data-i18n="view.login">登 录</a>
+		<div class="login_revole">
+			<span class="pass_forget" id="forgetPsdBtn" data-i18n="view.forgetPsd">忘记密码？</span><span>|</span><a class="register" href="javascript:gotoRegister();" data-i18n="view.register">立即注册</a>
+		</div>
+	</div>
+	<div class="login_methods">
+		<span data-i18n="view.thirdLogin">第三方登录</span>
+		<span id="qq">
+				<img src="../img/icon_qq.png" />
+			</span>
+		<span id="wechat">
+				<img src="../img/icon_wechat.png" />
+			</span>
+		<span id="weibo">
+				<img src="../img/icon_weibo.png" />
+			</span>
+	</div>
+
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script>
+	apiready = function() {
+		loadLocale();
+		var wx = api.require('wx');
+		wx.isInstalled(function(ret, err) {
+			if (ret.installed) {} else {
+				$api.css($api.dom('#wechat'), 'display:none;')
+			}
+		});
+		var third = 3;
+		var qq = api.require('qq');
+		qq.installed(function(ret, err) {
+			if (ret.status) {} else {
+				$api.css($api.dom('#qq'), 'display:none;')
+			}
+		});
+		if (!globalConfig.login.qq) {
+			third--;
+			$api.css($api.dom('#qq'), 'display:none;')
+		}
+		if (!globalConfig.login.wechat) {
+			third--;
+			$api.css($api.dom('#wechat'), 'display:none;')
+		}
+		if (!globalConfig.login.weibo) {
+			third--;
+			$api.css($api.dom('#weibo'), 'display:none;')
+		}
+
+		if (third == 0) {
+			$api.css($api.dom('.login_methods'), 'display:none;')
+		}
+	}
+
+	function gotoRegister() {
+		api.openWin({
+			reload: true,
+			name: 'register',
+			url: './register.html'
+		});
+	}
+
+	$api.addEvt($api.dom('#forgetPsdBtn'), 'click', function() {
+		api.openWin({
+			reload: true,
+			name: 'forgetPsd',
+			url: './forgetPsd.html'
+		});
+	});
+
+
+	$api.addEvt($api.dom("#weibo"), 'click', function() {
+		var weibo = api.require('weibo');
+		weibo.auth(function(ret, err) {
+			if (ret.status) {
+				weibo.getUserInfo({
+					token: ret.token,
+					userId: ret.userId
+				}, function(ret, err) {
+					if (ret.status) {
+						tpaLogin('weibo', ret.userInfo, function(ret, err) {
+							if (ret.status) {
+								gotoMain();
+							} else {
+								var msg = i18n.t('error.unknownError','未知错误');
+								if (err && err.msg)
+									msg = err.msg;
+								api.alert({
+									title: i18n.t('alert.title.loginFailed','无法登陆'),
+									msg: msg,
+			            buttons : [i18n.t('ok','确定')]
+								});
+							}
+						});
+					}
+				});
+			} else {
+				alert(JSON.stringify(err));
+			}
+		});
+	});
+
+	$api.addEvt($api.dom("#qq"), 'click', function() {
+		var qq = api.require('qq');
+		qq.login(function(ret, err) {
+			if (ret.status) {
+				var openId = ret.openId;
+				qq.getUserInfo(function(ret, err) {
+					if (ret.status) {
+						var userInfo = ret.info;
+						userInfo.idstr = "" + openId;
+						tpaLogin('qq', userInfo, function(ret, err) {
+							if (ret.status) {
+								gotoMain();
+							} else {
+								var msg = i18n.t('error.unknownError','未知错误');
+								if (err && err.msg)
+									msg = err.msg;
+								api.alert({
+									title: i18n.t('error','错误'),
+									msg: msg,
+			            buttons : [i18n.t('ok','确定')]
+								});
+							}
+						});
+					} else {
+						api.alert({
+							msg: err.msg,
+	            buttons : [i18n.t('ok','确定')]
+						});
+					}
+				});
+			} else {
+				alert(JSON.stringify(err));
+			}
+		});
+	});
+
+	$api.addEvt($api.dom("#wechat"), 'click', function() {
+		var wx = api.require('wx');
+		wx.auth({
+		}, function(ret, err) {
+			if (ret.status) {
+				var code = ret.code;
+				wx.getToken({
+					code: code
+				}, function(ret, err) {
+					if (ret.status) {
+						var accessToken = ret.accessToken;
+						var openId = ret.openId;
+						wx.getUserInfo({
+							accessToken: accessToken,
+							openId: openId
+						}, function(ret, err) {
+							if (ret.status) {
+								tpaLogin('wechat', ret, function(ret, err) {
+									if (ret.status) {
+										gotoMain();
+									} else {
+										var msg = i18n.t('error.unknownError','未知错误');
+										if (err && err.msg)
+											msg = err.msg;
+										api.alert({
+											title: i18n.t('error','错误'),
+											msg: msg,
+					            buttons : [i18n.t('ok','确定')]
+										});
+									}
+								});
+							} else {
+								if (err.code == 6) {
+									msg = i18n.t('error.timeout','网络超时');
+								} else if (err.code == -1) {
+									msg = i18n.t('error.unknownError','未知错误');
+								} else if (err.code > 0) {
+									msg = i18n.t('error.config','配置错误');
+								}
+								api.alert({
+									title: i18n.t('alert.title.loginFailed','无法登陆'),
+									msg: msg,
+			            buttons : [i18n.t('ok','确定')]
+								});
+							}
+						});
+
+					} else {
+						if (err.code == 4) {
+							msg = i18n.t('error.timeout','网络超时');
+						} else if (err.code == -1) {
+							msg = i18n.t('error.unknownError','未知错误');
+						} else if (err.code > 0) {
+							msg = i18n.t('error.config','配置错误');
+						}
+						api.alert({
+							title: i18n.t('alert.title.loginFailed','无法登陆'),
+							msg: msg,
+	            buttons : [i18n.t('ok','确定')]
+						});
+					}
+				});
+			} else {
+				if (err.code == 3) {
+					api.alert({
+						title: i18n.t('alert.title.loginFailed','无法登陆'),
+						msg: i18n.t('alert.msg.noWechatInstall','没有检测到您安装微信'),
+            buttons : [i18n.t('ok','确定')]
+					});
+				} else if (err.code == -1) {
+					api.alert({
+						title: i18n.t('alert.title.loginFailed','无法登陆'),
+						msg: i18n.t('error.unknownError','未知错误'),
+            buttons : [i18n.t('ok','确定')]
+					});
+				}
+			}
+		});
+	});
+
+	$api.addEvt($api.dom('#loginBtn'), 'click', function() {
+		var userName = $api.val($api.dom('input.name'));
+		var password = $api.val($api.dom('input.pwd'));
+		login(userName, password, function(ret, err) {
+			if (ret.status) {
+				gotoMain();
+			} else {
+				var msg = i18n.t('error.unknownError','未知错误');
+				if (err && err.msg)
+					msg = err.msg;
+				api.alert({
+					title: i18n.t('alert.title.loginFailed','无法登陆'),
+					msg: msg,
+					buttons : [i18n.t('ok','确定')]
+				});
+			}
+		})
+	});
+</script>

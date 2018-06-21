@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+	<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+	<title>结果</title>
+	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+	<link rel="stylesheet" type="text/css" href="../css/chart.css" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<script type="text/javascript" src="../script/lib/skin.js"></script>
+	<script>
+        skinUtil.loadSkin(["skin", "additional"]);
+	</script>
+	<link rel="stylesheet" type="text/css" href="../css/additional.css" />
+	<style>
+    .swipe {
+        overflow: hidden;
+        visibility: hidden;
+        position: relative;
+        }
+        .swipe-wrap {
+        overflow: hidden;
+        position: relative;
+        }
+        .swipe-wrap > div {
+        float:left;
+        width:100%;
+        position: relative;
+        }
+    </style>
+</head>
+
+<body style="position: relative; background:url(../img/main_bg.jpg) no-repeat; background-size:100% 100%; background-attachment: fixed;">
+	<div class="title" style="background:none;">
+		<span class="btn_logo">
+				<img src="../img/left_arrow.png" />
+			</span> <span id="result-title" data-i18n="view.spectralDetection">光谱检测</span>
+	</div>
+	<div class="head-box result inverte" id="result-list">
+		<div class="result-content">
+			<p class="collect_average" data-i18n="view.noDetectionResult">没有检测结果</p>
+		</div>
+		<div class="collect_info swipe" id="slider">
+			<div class="collect_ul swipe-wrap" >
+			</div>
+		</div>
+	</div>
+	<div class="head-box result" style="display: none" id="result-list-collect">
+		<div class="result-content">
+			<p class="result-info"><span data-i18n="view.integrationPeriod">积分时间</span>：<span class="result-period">100</span>ms</p>
+			<p class="result-info"><span data-i18n="view.collectNum">采集次数</span>：<span class="result-collectNum">5</span>次</p>
+			<p class="result-info"><span data-i18n="view.acquisitionPosition">采集地点</span>：<span class="result-position"></span></p>
+			<p class="result-info"><span data-i18n="view.acquisitionTime">采集时间</span>：<span class="result-time"></span></p>
+		</div>
+	</div>
+	<ul class="r_tab">
+		<li class="press" data-property="dn"><span data-i18n="term.dn">DN值</span></li>
+		<li data-property="reflectivity"><span data-i18n="term.reflectivity">反射率</span></li>
+	</ul>
+	<div class="chart-show" id="chart">
+	</div>
+	<div class="result_btns">
+		<div class="btngroup_one">
+			<span class="save"></span><span class="cancel"></span>
+		</div>
+		<div class="btngroup_afterSave">
+			<span class="go_on"></span><span class="cancel"></span>
+		</div>
+	</div>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script type="text/javascript" src="../script/task.js"></script>
+<script type="text/javascript" src="../script/dp.js"></script>
+<script type="text/javascript" src="../script/spp.js"></script>
+<script type="text/javascript" src="../script/device.js"></script>
+<script type="text/javascript" src="../script/chart.js"></script>
+<script type="text/javascript" src="../script/lib/echarts.common.min.js"></script>
+<script type="text/javascript" src="../script/lib/swipe.min.js"></script>
+<script>
+	var dialogBox;
+	var myChart;
+	var chartData;
+	var position; //位置信息
+	var saved = false;
+	var inCheck = true;
+	var taskResult = null;
+
+	var properties = $api.domAll('.r_tab li');
+    initCollectMode();
+
+	var i;
+	for (i = 0; i < properties.length; i++) {
+		var el = properties[i];
+		$api.addEvt(el, 'click', function() {
+			var j;
+			for (j = 0; j < properties.length; j++) {
+				$api.removeCls(properties[j], 'press');
+			}
+			$api.addCls(this, 'press');
+			var property = $api.attr(this, 'data-property');
+			initChat(property);
+		});
+	}
+
+	var cancels = $api.domAll('.cancel');
+	for (i = 0; i < cancels.length; i++) {
+		var el = cancels[i];
+		$api.addEvt(el, 'click', function() {
+			gotoMain();
+		});
+	}
+
+	$api.addEvt($api.dom('.go_on'), 'click', function() {
+		beginCollect();
+	});
+
+	$api.addEvt($api.dom('.btn_logo'), 'click', function() {
+		gotoMain();
+	});
+
+	$api.addEvt($api.dom('.save'), 'click', function() {
+		if (inCheck && !appConfig.globalConfig.collectMode) {
+			api.toast({
+				msg: i18n.t('toast.msg.detectingSaveLater','正在检测数据，请稍后保存'),
+				duration: 2000,
+				location: 'bottom'
+			});
+			return;
+		}
+		var FNPhotograph = api.require('FNPhotograph');
+		FNPhotograph.open({
+			path: 'fs://task//img',
+			album: false,
+			quality: 'high'
+		}, function(ret) {
+			if (ret.eventType == "takePhoto") {
+				FNPhotograph.close();
+				var imagePath = ret.imagePath;
+				doSaveLocal("", imagePath);
+			}
+		});
+	});
+
+	apiready = function() {
+		loadLocale();
+		var bMap = api.require('bMap');
+		bMap.getLocation({
+			accuracy: '100m',
+			autoStop: true,
+			filter: 1
+		}, function(ret, err) {
+			if (ret.status) {
+				position = ret;
+				bMap.getNameFromCoords({
+					lon: position.lon,
+					lat: position.lat
+				}, function(ret, err) {
+					if (ret.status) {
+						position.address = ret.address; //字符串类型；地址信息
+						position.province = ret.province; //字符串类型；省份
+						position.city = ret.city; //字符串类型；城市
+						position.district = ret.district; //字符串类型；县区
+						position.streetName = ret.streetName; //字符串类型；街道名
+						position.streetNumber = ret.streetNumber;
+                        $api.text($api.dom('.result-position'), position.streetName);
+					} else {
+                        $api.text($api.dom('.result-position'), i18n.t('view.unknownPosition', '未知地点'));
+						console.log(JSON.stringify(err));
+					}
+				});
+			} else {
+				console.log(JSON.stringify(err));
+			}
+			var now = new Date().Format('yyyy-MM-dd hh:mm:ss');
+            $api.text($api.dom('.result-time'), now);
+            $api.text($api.dom('.result-collectNum'), api.pageParam.datas.length);
+            $api.text($api.dom('.result-period'), appConfig.device.period || 100);
+		});
+
+		$api.attr($api.dom('.chart-show'), 'width', api.winWidth);
+		$api.attr($api.dom('.chart-show'), 'height', api.winWidth * 2 / 3);
+		myChart = echarts.init(document.getElementById('chart'));
+		var property = $api.attr($api.dom('.r_tab .press'), 'data-property');
+
+		dialogBox = api.require('dialogBox');
+		var datas = api.pageParam.finallyData;
+		var labels = api.pageParam.labels;
+		DPTool.setXAxis(labels);
+
+		chartData = {
+			dn: datas,
+			// radiance: DPTool.getRadiance(datas),
+			reflectivity: DPTool.getReflectivity(datas)
+				// rmPacketLine: DPTool.getRmPacketLine(datas)
+		}
+        if (!appConfig.globalConfig.collectMode) {
+            api.showProgress({
+                style: 'default',
+                animationType: 'fade',
+                title: i18n.t('progress.title.detecting', '检测结果'),
+                text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
+                modal: false
+            });
+            stTask.getTestResult(chartData.reflectivity, function(result) {
+                api.hideProgress();
+                inCheck = false;
+                if (result.err){
+                    var errorMsg = i18n.t('error.unknownError','未知错误');
+                    if (typeof result.err == "string")
+                        errorMsg = result.err;
+                    else if (result.err.errorMsg)
+                        errorMsg = result.err.errorMsg;
+                    console.log(errorMsg);
+                    api.toast({
+                        msg: i18n.t('toast.msg.detectFailed','检测失败') + ":" + errorMsg,
+                        duration: 2000,
+                        location: 'bottom'
+                    });
+                } else {
+                    taskResult = result
+                    setTestResult(result);
+                }
+            });
+        }
+		initChat(property);
+
+		api.addEventListener({
+			name: 'keyback'
+		}, function(ret, err) {
+			gotoMain();
+		});
+	}
+
+	function initChat(property) {
+		var showConfig = {};
+		var datas;
+		showConfig.formatter = i18n.t('term.wavelength', '波长') + "：{b}nm <br/> {a} : {c}";
+		switch (property) {
+			case 'dn':
+				showConfig.title = i18n.t('term.dn', 'DN值');
+				datas = chartData[property];
+				break;
+			case 'radiance':
+				showConfig.title = i18n.t('term.radiance', '辐亮度');
+				datas = chartData[property];
+				break;
+			case 'reflectivity':
+				showConfig.title = i18n.t('term.reflectivity', '反射率');
+				showConfig.formatter = i18n.t('term.wavelength', '波长') + "：{b}nm <br/> {a} : {c}";
+				datas = [];
+				for (var i = 0; i < chartData[property].length; i++) {
+					datas[i] = parseFloat(chartData[property][i]).toFixed(2);
+				}
+				break;
+			case 'rmPacketLine':
+				showConfig.title = i18n.t('term.rmPacketLine', '除去包格线');
+				datas = [];
+				for (var i = 0; i < chartData[property].length; i++) {
+					datas[i] = parseFloat(chartData[property][i]).toFixed(2);
+				}
+				break;
+			default:
+
+		}
+		var option = initChartOption(showConfig, datas);
+
+		// 使用刚指定的配置项和数据显示图表。
+		myChart.setOption(option);
+	}
+
+	function doSaveLocal(title, imagePath) {
+		stTask.addTask(api.pageParam.finallyData, api.pageParam.datas, taskResult, position, title, imagePath, appConfig.device, function(ret) {
+			if (ret.status) {
+				saved = true;
+				api.toast({
+					msg: i18n.t('toast.msg.saveSuccess', '保存成功'),
+					duration: 2000,
+					location: 'top'
+				});
+				$api.css($api.dom('.btngroup_afterSave'), 'display:block;');
+				$api.css($api.dom('.btngroup_one'), 'display:none;');
+			} else {
+				api.alert({
+					title: i18n.t('toast.msg.saveFailed', '保存失败'),
+					msg: ret.err.msg,
+					buttons : [i18n.t('ok','确定')]
+				});
+			}
+		});
+	}
+
+	function setTestResult(result) {
+		if (result){
+			$.remove('.result-content');
+			$.remove('.taskResult');
+			var n = 0;
+			var taskResult = null;
+			for (var i = 0; i < result.data.length; i++) {
+				if (n++ == 0) {
+					taskResult = '<div class="taskResult">';
+				}
+
+				var title = result.chineseName[i];
+				var unit = result.unit[i];
+				var decimal = 2;
+				if (result.decimal) {
+						decimal = parseInt(result.decimal[i]);
+				}
+				var data = result.data[i] + "";
+				if (data.length > 6)
+					data = data.substring(0, 6);
+				data = parseFloat(data).toFixed(decimal);
+				if (data < 0)
+					data = "无效";
+				taskResult += '<p class="collect_average"><span class="text">' + title + '</span>';
+				taskResult += '<span class="line"></span>';
+				taskResult += '<span class="special">' + data + '</span><span class="unit">' + unit + '</span></p>';
+				if (n == 4){
+					n = 0;
+					taskResult += "</div>";
+					$.append('.collect_ul', taskResult);
+				}
+			}
+			if (n > 0) {
+				taskResult += "</div>";
+				$.append('.collect_ul', taskResult);
+			}
+		}
+		new Swipe(document.getElementById('slider'), {
+		  startSlide: 0,
+		  speed: 400,
+		  auto: 5000,
+		  continuous: true,
+		  disableScroll: false,
+		  stopPropagation: false,
+		  callback: function(index, elem) {},
+		  transitionEnd: function(index, elem) {}
+		});
+	}
+	
+	function initCollectMode() {
+	    var title = "";
+		if (appConfig.globalConfig.collectMode) {
+            $api.attr($api.dom('#result-title'), 'data-i18n', 'view.acquisitionData');
+            $api.css($api.dom('#result-list'), 'display:none');
+            $api.css($api.dom('#result-list-collect'), 'display:block');
+		}
+    }
+</script>

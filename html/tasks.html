@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+	<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<script type="text/javascript" src="../script/lib/skin.js"></script>
+	<script>
+        skinUtil.loadSkin(["skin", "additional"]);
+	</script>
+	<link rel="stylesheet" type="text/css" href="../css/additional.css" />
+	<title>我的</title>
+</head>
+
+<body style="">
+	<div class="title">
+		<span class="btn_logo">
+				<img src="../img/left_arrow.png" />
+			</span>
+		<span class="menu"></span><span data-i18n="view.myTask">我的任务</span>
+	</div>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/task.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script type="text/javascript" src="../script/device.js"></script>
+<script>
+	var UIListView;
+	var mnPopups;
+	var dialogBox;
+	var start = 0;
+	var limit = 10;
+	var selected = [];
+	loadLocale();
+	$api.addEvt($api.dom('.btn_logo'), 'click', function() {
+		gotoMain();
+	});
+	$api.addEvt($api.dom('.menu'), 'click', function() {
+		var y = $api.cssVal($api.dom('.title'), 'height');
+		y = y.substring(0, y.indexOf('px'));
+		mnPopups.close();
+		mnPopups.open({
+			rect: {
+				w: 100,
+				h: 135
+			},
+			position: {
+				x: api.winWidth - 15,
+				y: y - 5
+			},
+			styles: {
+				mask: 'rgba(0,0,0,0.2)',
+				bg: '#eee',
+				cell: {
+					bg: {
+						normal: '',
+						highlight: ''
+					},
+					h: 45,
+					title: {
+						marginL: 45,
+						color: '#636363',
+						size: 12,
+					},
+					icon: {
+						marginL: 10,
+						w: 25,
+						h: 25,
+						corner: 2
+					}
+				},
+				pointer: {
+					size: 7,
+					xPercent: 90,
+					yPercent: 0,
+					orientation: 'downward'
+				}
+			},
+			datas: [{
+				title: i18n.t('menu.title.uploadData','上传数据'),
+				icon: 'widget://template/img/menu_uplpad.png'
+			}, {
+				title: i18n.t('menu.title.remarkTask','标注任务'),
+				icon: 'widget://template/img/menu_remark.png'
+			}, {
+				title: i18n.t('delete','删除'),
+				icon: 'widget://template/img/menu_delete.png'
+			}],
+			animation: true
+		}, function(ret) {
+			if (ret.eventType == "click") {
+				if (ret.index == 0) { //upload
+					if (selected.length == 0) {
+						api.confirm({
+							title: i18n.t('warnning','警告'),
+							msg: i18n.t('confirm.msg.uploadAllMessage', '没有选择任务，是要上传全部未上传任务吗？'),
+							buttons: [i18n.t('ok','确定'), i18n.t('cancel','取消')]
+						}, function(ret, err) {
+							if (ret) {
+								if (ret.buttonIndex == 1) {
+									if (api.pageParam.tasks)
+										uploadTasks(api.pageParam.tasks);
+									else {
+										stTask.findTask(function(tasks) {
+											uploadTasks(tasks);
+										}, 0, 100000);
+									}
+								} else {
+									api.toast({
+										msg: i18n.t('toast.msg.clickImgSelectTask','点击图片选择任务'),
+										duration: 2000,
+										location: 'bottom'
+									});
+								}
+							}
+						});
+					} else {
+						var tasks = [];
+						for (var i = 0; i < selected.length; i++) {
+							tasks.push(selected[i].task);
+						}
+						uploadTasks(tasks);
+					}
+				} else if (ret.index == 1) { //remark
+					if (!api.pageParam.tasks && selected.length == 0) {
+						api.alert({
+							title: i18n.t('alert.title.selectTask','请选择任务'),
+							msg: i18n.t('alert.msg.selectTaskToRemark','你没有选择任务，请点击图片选中要标注的任务'),
+	            buttons : [i18n.t('ok','确定')]
+						});
+						return;
+					}
+					if (selected.length > 0) {
+						remarkTask();
+					} else {
+						remarkTask(api.pageParam.tasks);
+					}
+
+				} else if (ret.index == 2) { //delete
+					if (selected.length == 0) {
+						api.alert({
+							title: i18n.t('alert.title.selectTask','请选择任务'),
+							msg: i18n.t('alert.msg.selectTaskToDelete','你没有选择任务，请点击图片选中要删除的任务'),
+	            buttons : [i18n.t('ok','确定')]
+						});
+						return;
+					}
+					deleteTask();
+				}
+			}
+		});
+	});
+	apiready = function() {
+		UIListView = api.require('UIListView');
+		mnPopups = api.require('MNPopups');
+		dialogBox = api.require('dialogBox');
+		var y = $api.cssVal($api.dom('.title'), 'height');
+		y = y.substring(0, y.indexOf('px'));
+		UIListView.open({
+			rect: {
+				x: 0,
+				y: y
+			},
+			data: [],
+			rightBtns: [{
+				bgColor: '#CE0000',
+				activeBgColor: '',
+				width: 70,
+				title: i18n.t('delete','删除'),
+				titleSize: 12,
+				titleColor: '#fff',
+				icon: '',
+				iconWidth: 20
+			}],
+			styles: {
+				borderColor: '#BEBEBE',
+				item: {
+					bgColor: '#FCFCFC',
+					activeBgColor: '#6C6C6C',
+					height: 80,
+					imgWidth: 70,
+					imgHeight: 70,
+					imgCorner: 50,
+					placeholderImg: 'widget://template/img/noimage.jpg',
+					titleSize: 16.0,
+					titleColor: '#333333',
+					subTitleSize: 12.0,
+					subTitleColor: '#999999',
+					remarkColor: '#666666',
+					remarkSize: 14,
+					remarkIconWidth: 30
+				}
+			},
+			bounces: true,
+			//fixedOn: api.frameName
+		}, function(ret, err) {
+			if (ret.eventType == "clickRightBtn") {
+				var index = ret.index;
+				UIListView.getDataByIndex({
+					index: index
+				}, function(ret) {
+					var data = ret.data;
+					api.confirm({
+						title : i18n.t('confirm.title.deleteTask','删除任务记录'),
+						title : i18n.t('confirm.msg.deleteTask','确认要删除任务记录吗？'),
+						buttons: [i18n.t('ok','确定'), i18n.t('cancel','取消')]
+					}, function(ret, err) {
+						if (ret && ret.buttonIndex == 1) {
+							var task = {};
+							task.id = data.uid;
+							stTask.deleteTask(task, function(ret) {
+								if (ret.status) {
+									start = 0;
+									selected = [];
+									if (api.pageParam.tasks) {
+										for (var i = 0; i < api.pageParam.tasks.length; i++) {
+											if (task.id == api.pageParam.tasks[i].id) {
+												api.pageParam.tasks.splice(i, 1);
+												break;
+											}
+										}
+									}
+									doReload(UIListView.reloadData);
+								} else {
+									api.alert({
+										title : i18n.t('alert.title.deleteFailed','删除失败'),
+										msg: ret.err.msg,
+				            buttons : [i18n.t('ok','确定')]
+									});
+								}
+							});
+						}
+					});
+				});
+
+			} else if (ret.eventType == "clickContent" || ret.eventType == "clickRemark") {
+				var index = ret.index;
+				UIListView.getDataByIndex({
+					index: index
+				}, function(ret) {
+					var data = ret.data;
+					stTask.getTask(data.uid, true, function(ret) {
+						if (ret.status) {
+							var task = ret.task;
+							gotoTaskInfo(task);
+						} else {
+							api.alert({
+								title : i18n.t('alert.title.readTaskInfoFailed','任务信息读取失败'),
+								msg: ret.err.msg,
+		            buttons : [i18n.t('ok','确定')]
+							});
+						}
+					})
+				});
+			} else if (ret.eventType == "clickImg") {
+				var index = ret.index;
+				var data = getDataByIndex(ret.index)
+				if (data != null) {
+					data.imgPath = data.task.imagePath;
+					UIListView.updateItem({
+						index: index,
+						data: data
+					}, function(ret, err) {
+						removeDataByIndex(index)
+					});
+				} else {
+					UIListView.getDataByIndex({
+						index: index
+					}, function(ret) {
+						data = ret.data;
+						data.index = index;
+						data.imgPath = "widget://template/img/selected.png";
+						UIListView.updateItem({
+							index: index,
+							data: data
+						}, function(ret, err) {
+							selected.push(data);
+						});
+					});
+				}
+			}
+		});
+
+		UIListView.setRefreshHeader({
+			loadingImg: 'widget://template/img/loading_more.gif',
+			bgColor: '#F5F5F5',
+			textColor: '#8E8E8E',
+			textDown : i18n.t('UIListView.header.textDown','下拉可以刷新...'),
+			textUp : i18n.t('UIListView.header.textUp','松开开始刷新...'),
+			showTime: true
+		}, function(ret, err) {
+			start = 0;
+			selected = [];
+			doReload(UIListView.reloadData);
+		});
+		UIListView.setRefreshFooter({
+			loadingImg: 'widget://template/img/loading_more.gif',
+			bgColor: '#F5F5F5',
+			textColor: '#8E8E8E',
+			textDown : i18n.t('UIListView.footer.textDown','松开开始加载...'),
+			textUp : i18n.t('UIListView.footer.textUp','上拉加载更多...'),
+			showTime: true
+		}, function(ret, err) {
+			if (api.pageParam.tasks) {
+				selected = [];
+				doReload(UIListView.reloadData);
+			} else
+				doReload(UIListView.appendData);
+		});
+
+		//mnPopups.hide();
+
+
+		selected = [];
+		doReload(UIListView.reloadData);
+		api.addEventListener({
+			name: 'keyback'
+		}, function(ret, err) {
+			gotoMain();
+		});
+	}
+
+	function doReload(callback) {
+		if (api.pageParam.tasks) {
+			var datas = loadData(api.pageParam.tasks);
+			callback({
+				data: datas
+			});
+		} else {
+			stTask.findTask(function(tasks) {
+				var datas = loadData(tasks);
+				start += datas.length;
+				if (datas.length == 0) {
+					api.toast({
+						msg : i18n.t('toast.msg.noMoreTask','没有更多的任务了'),
+					});
+				}
+				callback({
+					data: datas
+				});
+			}, start, limit);
+		}
+	}
+
+	function loadData(tasks) {
+		var datas = [];
+		for (var i = 0; i < tasks.length; i++) {
+			var task = tasks[i];
+			var data = {};
+
+			var date = stTask.dateFormat('yyyy-MM-dd', new Date(task.timestamp));
+			var city = i18n.t('UIListView.data.unknown','未知');
+			if (task.position && task.position.city) {
+				city = task.position.city
+			}
+			data.uid = task.id;
+			data.imgPath = task.imagePath;
+			data.title = task.name;
+			data.subTitle = city + " " + date;
+			if (task.result) {
+				data.remark = i18n.t('UIListView.data.viewResult','查看结果');
+			} else {
+				data.remark = i18n.t('UIListView.data.noResult','未计算结果');
+			}
+			//data.icon = "widget://template/img/level" + task.result.level + ".png";// + task.level + ".png";
+			data.task = task;
+			datas.push(data);
+		}
+		return datas;
+	}
+
+	function getDataByIndex(index) {
+		var data = null;
+		for (var i = 0; i < selected.length; i++) {
+			if (selected[i].index == index) {
+				data = selected[i];
+				break;
+			}
+		}
+		return data;
+	}
+
+	function removeDataByIndex(index) {
+		for (var i = 0; i < selected.length; i++) {
+			if (selected[i].index == index) {
+				selected.splice(i, 1);
+				break;
+			}
+		}
+	}
+
+	function deleteTask() {
+		api.confirm({
+			title : i18n.t('confirm.title.deleteTask','删除任务记录'),
+			title : i18n.t('confirm.msg.deleteTask','确认要删除任务记录吗？'),
+			buttons: [i18n.t('ok','确定'), i18n.t('cancel','取消')]
+		}, function(ret, err) {
+			if (ret && ret.buttonIndex == 1) {
+				var needDelete = selected.length;
+				for (var i = 0; i < selected.length; i++) {
+					var task = {};
+					task.id = selected[i].uid;
+					if (api.pageParam.tasks) {
+						for (var j = 0; j < api.pageParam.tasks.length; j++) {
+							if (task.id = api.pageParam.tasks[j].id) {
+								api.pageParam.tasks.splice(j, 1);
+								break;
+							}
+						}
+					}
+					stTask.deleteTask(task, function(ret) {
+						needDelete--;
+						if (needDelete == 0) {
+							start = 0;
+							selected = [];
+							doReload(UIListView.reloadData);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	function remarkTask(selectedTask) {
+		dialogBox.input({
+			keyboardType: 'forbid',
+			texts: {
+				title : i18n.t('input.texts.title.taskMark', '任务备注'),
+				placeholder: i18n.t('input.texts.placeholder.taskMark', '备注信息'),
+				default: "",
+				leftBtnTitle: i18n.t('cancel','取消'),
+				rightBtnTitle: i18n.t('ok','确定')
+			},
+			styles: dialogStyles,
+			tapClose: true
+		}, function(ret) {
+			dialogBox.close({
+				dialogName: 'input'
+			});
+			if (ret.eventType == 'left') {
+				// doSaveLocal(ret.text);
+			} else if (ret.eventType == 'right') {
+				if (ret.text <= 0 && ret.text > 32) {
+					api.alert({
+						title: i18n.t('alert.title.inputError','输入错误'),
+						msg: i18n.t('alert.msg.inputRangeError1-32','只能输入1-32之间的数'),
+            buttons : [i18n.t('ok','确定')]
+					});
+					return;
+				}
+				if (selectedTask) {
+					var needUpdate = selectedTask.length;
+					for (var i = 0; i < selectedTask.length; i++) {
+						var task = selectedTask[i];
+						task.name = ret.text;
+						stTask.updateTaskInfo(task, function(ret, err) {
+							needUpdate--;
+							if (needUpdate == 0) {
+								doReload(UIListView.reloadData);
+							}
+						});
+					}
+				} else {
+					for (var i = 0; i < selected.length; i++) {
+						var data = selected[i];
+						var task = data.task;
+						task.name = ret.text;
+						stTask.updateTaskInfo(task, function(ret, err) {
+
+						});
+						if (task.isUpload) {
+							stTask.sendTaskToRemoteById(task.id);
+						}
+						data.title = task.name;
+						data.imgPath = task.imagePath;
+						UIListView.updateItem({
+							index: data.index,
+							data: data
+						}, function(ret, err) {});
+					}
+				}
+				selected = [];
+			}
+		});
+	};
+
+	function uploadTasks(tasks) {
+		var needUpload = tasks.length;
+		api.showProgress({
+			style: 'default',
+			animationType: 'fade',
+			title: i18n.t('progress.title.uploading', '任务上传中') + "……",
+			text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
+			modal: true
+		});
+		for (var i = 0; i < tasks.length; i++) {
+			var task = tasks[i];
+			if (!task.isUpload) {
+				stTask.sendTaskToRemoteById(task.id, function(ret, err) {
+					if (ret.status) {
+						task.isUpload = true;
+						needUpload--;
+						if (needUpload == 0) {
+							api.hideProgress();
+							start = 0;
+							selected = [];
+							doReload(UIListView.reloadData);
+						}
+					} else {
+						api.hideProgress();
+						api.alert({
+								title: i18n.t('alert.title.uploadFailed', '上传失败'),
+								msg: err.msg,
+		            buttons : [i18n.t('ok','确定')]
+						});
+						return;
+					}
+				});
+			} else {
+				needUpload--;
+				if (needUpload == 0) {
+					api.hideProgress();
+					start = 0;
+					selected = [];
+					doReload(UIListView.reloadData);
+				}
+			}
+		}
+	}
+</script>

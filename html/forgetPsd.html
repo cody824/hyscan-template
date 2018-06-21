@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+	<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<script type="text/javascript" src="../script/lib/skin.js"></script>
+	<script>
+        skinUtil.loadSkin();
+	</script>
+	<title>忘记密码</title>
+</head>
+
+<body class="register_bg login_bg">
+	<div class="logo"></div>
+	<div class="login_con" style="margin-bottom:3%; margin-top:10%;">
+		<div class="login_info">
+			<span class="icon01"></span><input id="mobileNum" type="txt" class="name" placeholder="请输入手机号" data-i18n="placeholder.mobile"/>
+		</div>
+		<div class="login_info">
+			<span class="icon02"></span><input id="password" type="password" class="pwd" placeholder="请输入密码" data-i18n="placeholder.password"/>
+		</div>
+		<div class="login_info">
+			<span class="icon03"></span><input id="authcode" type="text" class="checknum" placeholder="请输入6位验证码" data-i18n="placeholder.authcode">
+		</div>
+		<span class="nums" id="sendAuthcode" data-i18n="view.send">发送</span>
+		<span class="nums" id="waitToRecive" style="display:none;">60s</span>
+	</div>
+	<div style="width: 100%; height: auto; position: relative; z-index: 99;">
+		<a class="login_btn register" href="javascript:resetPsd();" data-i18n="view.resetPsd">重设密码</a>
+		<a class="back_login"  href="javascript:gotoLogin();" data-i18n="view.backToLogin">已有账号，返回登录</a>
+	</div>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript">
+	function gotoLogin() {
+		api.openWin({
+			name: 'login',
+			url: './login.html'
+		});
+	}
+
+	function resetPsd() {
+		var mobile = $api.val($api.dom('#mobileNum'));
+		var password = $api.val($api.dom('#password'));
+		var authcode =  $api.val($api.dom('#authcode'));
+		if (!isMobile(mobile)) {
+			api.alert({
+				title: i18n.t('alert.title.inputError','输入错误'),
+				msg: i18n.t('alert.msg.inputMobileNum','请输入正确的手机号'),
+				buttons : [i18n.t('ok','确定')]
+			});
+			return;
+		}
+		if (password.length <= 0 || password.length > 32) {
+			api.alert({
+				title: i18n.t('alert.title.inputError','输入错误'),
+				msg: i18n.t('alert.msg.passwordLengh1-32','密码长度1-32')
+			});
+			return;
+		}
+		if (authcode.length == 0) {
+			api.alert({
+				title: i18n.t('alert.title.inputError','输入错误'),
+				msg: i18n.t('alert.msg.inputAuthcode','请输入验证码')
+			});
+			return;
+		}
+		api.ajax({
+		    url: globalConfig.serverUrl + "security/auth/resetpsd/mobile",
+		    method: 'post',
+			headers : {
+				"Accept" : 'application/json'
+			},
+		    data: {
+		        values: {
+					authcode : authcode,
+		            mobile : mobile,
+					password : password
+		        }
+		    }
+		},function(ret, err){
+		    if (ret) {
+				$api.toast(i18n.t('toast.title.resetComplete','重置成功'), '');
+		        setTimeout(gotoLogin, 500);
+		    } else {
+				var errMsg = JSON.parse(err.msg);
+		        alert( errMsg.errorMsg);
+		    }
+		});
+	}
+
+	function isMobile(mobile){
+		var mbReg = /^(0|86|17951)?(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
+		return mbReg.test(mobile);
+	}
+
+	$api.addEvt($api.dom('#sendAuthcode'), 'click', function() {
+		var mobile = $api.val($api.dom('#mobileNum'));
+		if (!isMobile(mobile)) {
+			api.alert({
+				title: i18n.t('alert.title.inputError','输入错误'),
+				msg: i18n.t('alert.msg.inputMobileNum','请输入正确的手机号'),
+				buttons : [i18n.t('ok','确定')]
+			});
+			return;
+		}
+		$api.css($api.dom('#waitToRecive'), 'display:block;');
+		$api.css($api.dom('#sendAuthcode'), 'display:none;');
+		api.ajax({
+			url: globalConfig.serverUrl + "security/authcode/phone",
+			method: 'post',
+			headers : {
+				"Accept" : 'application/json'
+			},
+			data: {
+				values: {
+					to: mobile,
+					len: 6
+				},
+			}
+		}, function(ret, err) {
+			if (ret) {
+				var time = 60;
+				var wait = setInterval(function() {
+					if (time-- == 0) {
+						clearInterval(wait);
+						$api.css($api.dom('#waitToRecive'), 'display:none;');
+						$api.css($api.dom('#sendAuthcode'), 'display:block;');
+					} else {
+						$api.text($api.dom('#waitToRecive'), time + "s");
+					}
+				}, 1000);
+			} else {
+				console.log(JSON.stringify(err));
+				$api.css($api.dom('#waitToRecive'), 'display:none;');
+				$api.css($api.dom('#sendAuthcode'), 'display:block;');
+				api.alert({
+					title: i18n.t('alert.title.sendFailed','发送失败'),
+					msg: i18n.t('alert.msg.retryLater','请稍后重试'),
+					buttons : [i18n.t('ok','确定')]
+				});
+			}
+		});
+
+	});
+
+
+	apiready = function() {
+		loadLocale();
+	}
+</script>

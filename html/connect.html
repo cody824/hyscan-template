@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>链接设备</title>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <script type="text/javascript" src="../script/lib/skin.js"></script>
+    <script>
+        skinUtil.loadSkin();
+    </script>
+</head>
+<body class="details_bg">
+<div class="title">
+			<span class="btn_logo">
+				<img src="../img/left_arrow.png" id="left" style="display:block;"/>
+				<img src="../img/loading_more.gif" style="display:none;width:16px;height:16px;" id="scanning">
+			</span> HyScan
+
+</div>
+<!--链接状态 -->
+<div class="state">
+    <div class="s_con">
+        <span class="icon_phone"></span>
+        <img src="../img/wifi_on.png" class="wifi_on"/>
+        <img src="../img/wifi_off.png" class="wifi_off"/>
+        <span class="icon_scanning"></span>
+    </div>
+    <p class="s_txt" data-i18n="view.deviceNotConnected">设备未连接</p>
+</div>
+<div class="link_btn" data-i18n="view.searchDevice">搜索设备</div>
+
+<!-- 蓝牙  -->
+<div class="bluetooth">
+    <div class="b_con">
+        <div class="b_top">
+            <span class="b_title" data-i18n="view.bluetooth">蓝牙</span>
+        </div>
+        <ul class="b_list">
+        </ul>
+    </div>
+    <div class="b_bottom">
+
+    </div>
+</div>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/spp.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script type="text/javascript" src="../script/device.js"></script>
+<script type="text/javascript">
+    apiready = function () {
+        sppUtil.init(function (blut) {
+            if (blut.status == "poweredOn") {
+            } else {
+                api.alert({
+                    title: i18n.t('error', '错误'),
+                    msg: blut.show.status,
+                    buttons: [i18n.t('ok', '确定')]
+                });
+            }
+            $api.css($api.dom('.wifi_off'), 'display:block;');
+            $api.css($api.dom('.wifi_on'), 'display:none;');
+            $api.text($api.dom('.s_txt'), i18n.t('view.deviceNotConnected', '设备未连接'));
+        });
+    }
+
+    $api.addEvt($api.dom('.link_btn'), 'click', function () {
+        $api.css($api.dom('.bluetooth'), 'top:0%;');
+        $api.css($api.dom('#scanning'), 'display:block;');
+        $api.css($api.dom('#left'), 'display:none;');
+        sppUtil.scanDevice(60 * 3, function (device) {
+            var deviceLi = $api.dom('.bluetooth .b_list li[address="' + device.address + '"]');
+            if (deviceLi == null) {
+                $api.append($api.dom('.bluetooth .b_list'), "<li address='" + device.address + "'>" + device.name + "</li>");
+                $api.addEvt($api.dom('.bluetooth .b_list li[address="' + device.address + '"]'), 'click', function () {
+                    var address = $api.attr(this, 'address');
+                    api.showProgress({
+                        style: 'default',
+                        animationType: 'fade',
+                        title: i18n.t('progress.title.connecting', '努力连接中') + "...",
+                        text: i18n.t('progress.text.connecting', '先喝杯茶') + "...",
+                        modal: false
+                    });
+                    sppUtil.connectDevice(address, function (ret, err) {
+                        console.log(JSON.stringify(ret));
+                        if (ret.status) {
+                            appConfig.device = JSON.parse(ret.device);
+                            api.showProgress({
+                                style: 'default',
+                                animationType: 'fade',
+                                title: i18n.t('progress.title.getDeviceInfo', '获取设备信息') + "...",
+                                text: i18n.t('progress.text.pleaseWait', '请稍候') + "...",
+                                modal: false
+                            });
+                            stDevice.readDeviceInfo(address, function () {
+                                sppUtil.disconnectDevice(address, function () {
+                                    $api.css($api.dom('.wifi_on'), 'display:block;');
+                                    $api.css($api.dom('.wifi_off'), 'display:none;');
+                                    $api.text($api.dom('.s_txt'), i18n.t('view.deviceConnected', '设备已连接'));
+                                    api.hideProgress();
+                                    gotoMain();
+                                });
+                            });
+                            setTimeout(function () {
+                                if (!appConfig.device.model) {
+                                    api.hideProgress();
+                                    api.alert({
+                                        title: i18n.t('alert.title.getDeviceInfoFailed', '获取设备信息失败'),
+                                        msg: i18n.t('alert.msg.getDeviceInfoFailed', '不能连接除HYSCAN光谱仪外的其他设备'),
+                                        buttons: [i18n.t('ok', '确定')]
+                                    });
+                                    appConfig.device = null;
+                                }
+                            }, 3000);
+                        } else {
+                            api.hideProgress();
+                            api.alert({
+                                title: i18n.t('connectError', '连接错误'),
+                                msg: err.msg,
+                                buttons: [i18n.t('ok', '确定')]
+                            });
+                        }
+                    });
+                });
+            }
+        });
+    });
+
+    $api.addEvt($api.dom('.bluetooth'), 'click', function () {
+        $api.css($api.dom('.bluetooth'), 'top:-100%;');
+        $api.css($api.dom('#scanning'), 'display:none;');
+        $api.css($api.dom('#left'), 'display:block;');
+        sppUtil.stopScanDevice(); //停止扫描
+    });
+
+    $api.addEvt($api.dom('.btn_logo'), 'click', function () {
+        gotoBack();
+    });
+</script>

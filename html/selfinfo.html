@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+		<link rel="stylesheet" type="text/css" href="../css/style.css" />
+		<script type="text/javascript" src="../script/lib/skin.js"></script>
+		<script>
+            skinUtil.loadSkin();
+		</script>
+		<title>个人信息</title>
+	</head>
+	<body style="position: relative; background-image:url(../img/main_bg1.jpg);background-repeat:no-repeat;background-size:cover; background-attachment: fixed;">
+		<div class="title" style="background:none;">
+			<span class="btn_logo">
+				<img src="../img/left_arrow.png" />
+			</span>
+
+		</div>
+		<div class="head-box self">
+			<!--<img class="eq-img" src="img/scanning_img.png" />-->
+            <div class="selfimg_wrap">
+       	    	<img id="avatar" src="../img/selfimg.jpg" width="236" height="235">
+            </div>
+		  <!-- <p class="eq-name">野百合</p> -->
+		</div>
+        <ul class="eq-box self">
+			<li class="clearfix">
+				<span class="ico-name" data-i18n="view.nick">昵称</span>
+				<span class="ico-info" id="fullName"></span>
+			</li>
+			<li class="clearfix">
+				<span class="ico-name" data-i18n="view.phone">电话</span>
+				<span class="ico-info" id="mobile"></span>
+			</li>
+			<li class="clearfix">
+				<span class="ico-name" data-i18n="view.email">邮箱</span>
+				<span class="ico-info" id="email"></span>
+			</li>
+            <li class="clearfix last">
+				<a href="javascript:doLogout();" data-i18n="view.logout">退出登录</a>
+			</li>
+		</ul>
+	</body>
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/user.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script>
+	var dialogBox;
+	apiready = function(){
+		loadLocale();
+		dialogBox = api.require('dialogBox');
+		var headImg = null;
+		if (appConfig.user.avatar) {
+			headImg = appConfig.user.avatar;
+		} else if (appConfig.user.avatarHd) {
+			 headImg = appConfig.user.avatarHd;
+		}
+		if (headImg)
+			$api.attr($api.dom('#avatar'), 'src', headImg);
+		$api.text($api.dom('#fullName'), appConfig.user.fullName);
+		$api.text($api.dom('#mobile'), appConfig.user.mobile);
+		$api.text($api.dom('#email'), appConfig.user.email);
+
+		api.addEventListener({
+			name: 'keyback'
+		}, function(ret, err) {
+			gotoMain();
+		});
+	}
+
+	$api.addEvt($api.dom('#avatar'), 'click', modifyAvatar);
+	$api.addEvt($api.dom('#mobile'), 'click', function(){
+		api.toast({
+				msg : i18n.t('toast.msg.disableModify', '不可修改'),
+		    duration: 2000,
+		    location: 'bottom'
+		});
+	});
+	$api.addEvt($api.dom('#fullName'), 'click', setupFullName);
+	$api.addEvt($api.dom('#email'), 'click', setupEmail);
+	$api.addEvt($api.dom('.btn_logo'), 'click', function() {
+		gotoMain();
+	});
+
+	function modifyAvatar(){
+		api.confirm({
+			title : i18n.t('confirm.title.modifyAvatar', '设置头像'),
+		   msg: i18n.t('confirm.msg.whereDoyouWantToSelectThePicture', '您想要从哪里选取图片') + '?',
+		   buttons: [i18n.t('confirm.btns.selfie', '优雅自拍'), i18n.t('confirm.btns.album', '相册收藏'), i18n.t('cancel','取消')]
+	   }, function(ret, err) {
+		   var sourceType = 'album';
+
+		   if (3 == ret.buttonIndex) { // 取消
+			   return;
+		   }
+
+		   if (1 == ret.buttonIndex) { // 打开相机
+			   sourceType = 'camera';
+		   }
+
+		   api.getPicture({
+			   sourceType: sourceType,
+			   allowEdit: true,
+			   targetWidth: 80,
+			   targetHeight: 80,
+			   encodingType: 'png',
+			   mediaValue: 'pic'
+		   }, function(ret, err) {
+				 var localImg = ret.data;
+			  hyUser.saveAvatar(localImg, function(ret){
+					 appConfig.user = ret;
+					 saveAppConfig();
+					 $api.attr($api.dom('#avatar'), 'src', localImg);
+			  });
+		   });
+	   });
+	}
+
+	function setupFullName() {
+		var current = $api.text($api.dom('#fullName'));
+		dialogBox.input({
+			keyboardType: 'forbid',
+			texts: {
+				title : i18n.t('input.texts.title.nick', '用户昵称'),
+				default: current,
+				placeholder: i18n.t('input.texts.title.nick', '用户昵称'),
+				leftBtnTitle: i18n.t('cancel','取消'),
+				rightBtnTitle: i18n.t('ok','确定')
+			},
+			styles: dialogStyles,
+			tapClose: true
+		}, function(ret) {
+			dialogBox.close({
+				dialogName: 'input'
+			});
+
+			if (ret.eventType == 'left') {
+				// doSaveLocal(ret.text);
+			} else if (ret.eventType == 'right') {
+				var fullName = ret.text
+				if (fullName.length > 32 || fullName.length < 2) {
+					api.alert({
+						title : i18n.t('alert.title.inputError', '输入错误'),
+						msg : i18n.t('alert.msg.nickRangeError2-32', '用户昵称长度为2-32'),
+            buttons : [i18n.t('ok','确定')]
+					});
+					return;
+				}
+				if (appConfig.user) {
+					appConfig.user.fullName = fullName;
+					hyUser.saveUser(appConfig.user, function(){
+						saveAppConfig();
+					});
+				}
+				$api.text($api.dom('#fullName'), ret.text);
+			}
+		});
+	}
+
+	function setupEmail() {
+		var current = $api.text($api.dom('#email'));
+		dialogBox.input({
+			keyboardType: 'forbid',
+			texts: {
+				title : i18n.t('input.texts.title.userEmail', '用户邮箱'),
+				default: current,
+				placeholder: i18n.t('input.texts.title.userEmail', '用户邮箱'),
+				leftBtnTitle: i18n.t('cancel','取消'),
+				rightBtnTitle: i18n.t('ok','确定')
+			},
+			styles: dialogStyles,
+			tapClose: true
+		}, function(ret) {
+			dialogBox.close({
+				dialogName: 'input'
+			});
+
+			if (ret.eventType == 'left') {
+				// doSaveLocal(ret.text);
+			} else if (ret.eventType == 'right') {
+				var email = ret.text;
+				if (!isEmail(email)) {
+					api.alert({
+						title : i18n.t('alert.title.inputError', '输入错误'),
+						msg : i18n.t('alert.msg.inputEmail', '请输入正确的电子邮箱')
+					});
+					return;
+				}
+				if (appConfig.user) {
+					appConfig.user.email = email;
+					hyUser.saveUser(appConfig.user, function(){
+						saveAppConfig();
+					});
+				}
+				$api.text($api.dom('#email'), ret.text);
+			}
+		});
+	}
+
+	function doLogout(){
+		api.confirm({
+			title : i18n.t('confirm.title.logout', '注销'),
+			msg : i18n.t('confirm.msg.logout', '确定要退出登录吗？'),
+			buttons: [i18n.t('ok','确定'), i18n.t('cancel','取消')]
+		}, function(ret, err){
+			if (ret.buttonIndex == 1) {
+				logout(function(){
+					 gotoMain();
+				});
+			}
+		});
+	}
+
+	function isEmail(email) {
+		var emailReg = /\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/;
+		return emailReg.test(email);
+	}
+</script>

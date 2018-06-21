@@ -1,0 +1,155 @@
+.btngroup_afterSave,.btngroup_taskInfo{
+	width:100%;
+	height:50px;
+}
+.btngroup_afterSave{
+	display:none;
+}
+.btngroup_afterSave span,.btngroup_taskInfo span{
+	float:left;
+	width:50px;
+	height:50px;
+}
+.task_img{
+	position:absolute;
+	right:15px;
+	top:18px;
+	width:38px;
+	height:30px;
+	display:block;
+}
+.task_img img{
+	width: 32px;
+	height : 32px;
+	display: none;
+}
+.pie {
+	width: 45%;
+	height: auto;
+	margin: 0 auto;
+	padding: 10%;
+	position: relative;
+	color: #ffffff;
+}
+.r_txt {
+	width: 100%;
+	height: auto;
+	position: absolute;
+	left: 0;
+	/*top: 34%;*/
+	text-align: center;
+	font-size: 20px;
+}
+.menu{
+	background:url(../img/menu.png) no-repeat;
+	background-size:38px 30px;
+	position:absolute;
+	right:15px;
+	top:18px;
+	width:38px;
+	height:30px;
+	display:block;
+}
+/*主页*/
+.task{
+	background:url(../img/task.png) no-repeat;
+	background-size:25px 35px;
+	position:absolute;
+	right:15px;
+	top:18px;
+	width:25px;
+	height:35px;
+	display:block;
+	text-decoration:none;
+}
+
+.detail-pop-add{
+	display: block;
+	width: 95%;
+	height: 95%;
+	overflow: hidden;
+	position: fixed;
+	/*left: 10%;*/
+	/*top: 35%;*/
+	background: #fff;
+	border-radius: 5px;
+	box-shadow: 0 0 10px #2f9de9;
+	border: 1px solid #bababa;
+}
+.details_contents_add{
+	width:95%;
+	margin:10px auto;
+}
+.details_contents_add .contents{
+	height:110px;
+}
+.details_contents_add .contents .my-img{
+	max-width: 60px;
+	height: 110px;
+}
+.details_contents_add .contents .my-con-add{
+	left : 115px;
+	top : 10px;
+	height:110px;
+	position: absolute;
+}
+.details_contents_add .my-con-title-add{
+	height:25px;
+	line-height:25px;
+}
+.details_contents_add .con-para{
+	color:#04b5e1;
+	line-height:20px;
+	white-space:nowrap;
+	text-overflow:ellipsis;
+	overflow:hidden;
+	word-break:break-all;
+}
+.item-pop-add{
+	display: block;
+	width: 95%;
+	height : 60px;
+	/*height: 95%;*/
+	overflow: hidden;
+	position: fixed;
+	/*left: 10%;*/
+	/*top: 35%;*/
+	background: #fff;
+	border-radius: 5px;
+	box-shadow: 0 0 10px #2f9de9;
+	border: 1px solid #bababa;
+	padding:5px 2%;
+	/*position: relative;*/
+}
+.item-left-add{
+	float:left;
+	width:40%;
+	height:60px;
+	color:#04b5e1;
+	font-size:14px;
+	padding:8% 4% 3%;
+}
+.item-right-add{
+	float:right;
+	width:40%;
+	height:45px;
+	font-size:14px;
+	color:#fff;
+	text-align:center;
+	line-height:35px;
+	padding-top:10px;
+}
+.item-right-add span{
+	display:block;
+	height:35px;
+	width:85%;
+	background:#4fd35e;
+	border-radius:5px;
+	margin-left:5px;
+}
+.sidebar {
+	left : 0;
+}
+.s_left {
+	width: 100%;
+}

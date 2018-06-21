@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <title>APP</title>
+</head>
+<style type="text/css">
+body {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+img {
+    border:none;
+    display: table;
+}
+</style>
+<body>
+    <img id="gotoCollect" src="../../img/result_collect_default.png" width="60" height="60">
+</body>
+</html>
+<script type="text/javascript" src="../../../script/api.js"></script>
+<script type="text/javascript" src="../../script/sameAsJq.js"></script>
+<script type="text/javascript" src="../../script/app.js"></script>
+<script type="text/javascript" src="../../script/locale.js"></script>
+<script type="text/javascript" src="../../script/navi.js"></script>
+<script type="text/javascript" src="../../script/spp.js"></script>
+<script type="text/javascript" src="../../script/device.js"></script>
+<script>
+    loadLocale();
+    $api.addEvt($api.dom("#gotoCollect"), 'click', function(){
+        prepareCollect(beginCollect);
+    });
+
+    function prepareCollect(cb) {
+        //检测是否绑定蓝牙设备如果绑定尝试连接设备
+        api.showProgress({
+          title : i18n.t('progress.title.scaning', '扫描设备中'),
+          text : i18n.t('progress.text.scaning', '很快的'),
+        });
+        sppUtil.init(function(blut) {
+            if (blut.status == "poweredOn") {
+                stDevice.isDeviceOk(function(deviceRet) {
+                    api.hideProgress();
+                    if (deviceRet.status == 0) {
+                        console.log("Device ok");
+                        try {
+                          if (appConfig.device.batteryInfo <= globalConfig.batteryAlarm){
+                            api.toast({
+                                msg: i18n.t('toast.msg.batteryAlarm', "电量过低，请及时充电"),
+                                duration: 10000,
+                                location: 'top'
+                            });
+                          }
+                        } catch (e) {}
+                        cb();
+                    } else if (deviceRet.status == -1) {
+                        setTimeout(gotoScanDevice, 1000);
+                    } else if (deviceRet.status == -2) {
+                        api.confirm({
+                            title : i18n.t('confirm.title.notConnected', '未能连接光谱仪'),
+                            msg : i18n.t('confirm.msg.notConnected', '连接光谱仪错误,检查设备后重新连接或者连接新设备'),
+                            buttons: [i18n.t('confirm.btns.reConnect', '重新连接'), i18n.t('confirm.btns.newDevice', '新设备')]
+                        }, function(ret, err) {
+                            if (ret.buttonIndex == 1) {
+                                prepareCollect(cb);
+                            } else {
+                                setTimeout(gotoScanDevice, 1000);
+                            }
+                        });
+                    } else if (deviceRet.status == 1) {
+                        stDevice.readDeviceInfo(deviceRet.device.address, function() {
+                            sppUtil.disconnectDevice(deviceRet.device.address, function() {
+                                //TODO 检测定标数据
+                            });
+                        });
+                    } else if (deviceRet.status == 2) {
+                        setTimeout(gotoRevise, 1000);
+                    }
+                });
+            } else {
+                api.hideProgress();
+                api.alert({
+                    title : i18n.t('error', '错误'),
+                    msg: blut.show.status,
+                    buttons : [i18n.t('ok','确定')]
+                });
+            }
+        });
+    }
+
+
+</script>

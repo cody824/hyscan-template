@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>结果</title>
+	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+	<link rel="stylesheet" type="text/css" href="../css/chart.css" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<script type="text/javascript" src="../script/lib/skin.js"></script>
+	<script>
+        skinUtil.loadSkin(["skin", "additional"]);
+	</script>
+	<link rel="stylesheet" type="text/css" href="../css/additional.css" />
+    <style>
+    .swipe {
+        overflow: hidden;
+        visibility: hidden;
+        position: relative;
+        }
+        .swipe-wrap {
+        overflow: hidden;
+        position: relative;
+        }
+        .swipe-wrap > div {
+        float:left;
+        width:100%;
+        position: relative;
+        }
+    </style>
+</head>
+
+<body style="position: relative; background:url(../img/main_bg.jpg) no-repeat; background-size:100% 100%; background-attachment: fixed;">
+    <div class="title" style="background:none;">
+		<span class="btn_logo">
+				<img src="../img/left_arrow.png" />
+			</span><span class="task_img"><img src="" /></span><span data-i18n="view.task">任务详情</span>
+	</div>
+	<div class="head-box result inverte">
+		<div class="collect_info swipe" id="slider">
+			<div class="collect_ul swipe-wrap" >
+				<div class="taskResult">
+					<p class="collect_average" data-i18n="view.noDetectionResult">没有检测结果</p>
+				</div>
+                <div class="taskInfo">
+                    <p class="result-info"><span data-i18n="view.integrationPeriod">积分时间</span>：<span class="result-period">100</span>ms</p>
+        			<p class="result-info"><span data-i18n="view.collectNum">采集次数</span>：<span class="result-collectNum">5</span></p>
+        			<p class="result-info"><span data-i18n="view.acquisitionPosition">采集地点</span>：<span class="result-position"></span></p>
+        			<p class="result-info"><span data-i18n="view.acquisitionTime">采集时间</span>：<span class="result-time"></span></p>
+				</div>
+                <div class="taskRemark">
+                    <!-- <p class="result-info">任务备注：<span class="result-remark">没有备注信息</span></p> -->
+                    <p class="result-info" ><span data-i18n="view.taskMark">任务备注</span>：<span class="result-remark" data-i18n="view.clickToEdit">点我编辑</span></p>
+				</div>
+			</div>
+		</div>
+	</div>
+    <ul class="r_tab">
+		<li class="press" data-property="dn"><span data-i18n="term.dn">DN值</span></li>
+		<li data-property="reflectivity"><span  data-i18n="term.reflectivity">反射率</span></li>
+	</ul>
+
+    <div class="chart-show" id="chart">
+
+    </div>
+    <div class="result_btns">
+		<div class="btngroup_taskInfo">
+			<span class="upload_task"></span><span class="check_result"></span>
+		</div>
+	</div>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script type="text/javascript" src="../script/task.js"></script>
+<script type="text/javascript" src="../script/dp.js"></script>
+<script type="text/javascript" src="../script/chart.js"></script>
+<script type="text/javascript" src="../script/lib/echarts.common.min.js"></script>
+<script type="text/javascript" src="../script/lib/swipe.min.js"></script>
+<script>
+    var myChart;
+    var chartData;
+    var pieId;
+    var task; //当前任务
+    var backWin = "my";
+    var imgView;
+    var imgShow = false;
+    var dialogBox;
+
+    var properties = $api.domAll('.r_tab li');
+
+    for (var i = 0; i < properties.length; i++) {
+        var el = properties[i];
+        $api.addEvt(el, 'click', function() {
+            var j;
+            for (j = 0; j < properties.length; j++) {
+                $api.removeCls(properties[j], 'press');
+            }
+            $api.addCls(this, 'press');
+            var property = $api.attr(this, 'data-property');
+            initChat(property);
+        });
+    }
+
+    $api.addEvt($api.dom('.task_img img'), 'click', function(){
+        if (this.src.length > 0)
+            showImg(this.src, task.name);
+    });
+
+    $api.addEvt($api.dom('.check_result'), 'click', function(){
+        api.confirm({
+            title : i18n.t('confirm.title.reDetection', '要重新检测数据吗？'),
+    			  msg : i18n.t('confirm.msg.reDetection', '请确保网络连接畅通'),
+            buttons: [i18n.t('ok','确定'), i18n.t('cancel','取消')]
+        }, function(ret, err){
+            if (ret.buttonIndex == 1){
+                var reflectivity = DPTool.getReflectivity(task.data.dn, task.dc[0], task.dc[1]);
+                stTask.getTestResult(reflectivity, function(result) {
+                    if (result.err){
+                        var errorMsg = i18n.t('error.unknownError','未知错误');
+                        if (typeof result.err == "string")
+                            errorMsg = result.err;
+                        else if (result.err.errorMsg)
+                            errorMsg = result.err.errorMsg;
+                        api.alert({
+                            title: i18n.t('alert.title.detectFailed', '检测失败'),
+                            msg: errorMsg,
+                            buttons : [i18n.t('ok','确定')]
+                        });
+                    } else {
+                        task.result = result;
+                        setTestResult(result);
+                        var saveTask = deepCopy(task);
+                        saveTask.result = result;
+                        stTask.updateTaskInfo(saveTask);
+                    }
+                });
+            }
+        });
+    });
+
+    $api.addEvt($api.dom('.upload_task'), 'click', function() {
+		stTask.sendTaskToRemoteById(task.id, function(ret, err){
+
+			if(!ret.status) {
+				console.log(JSON.stringify(err));
+				api.alert({
+					title: i18n.t('alert.title.uploadFailed', '上传失败'),
+					msg: err.msg,
+					buttons : [i18n.t('ok','确定')]
+				});
+			} else {
+				task.isUpload = true;
+				api.toast({
+					msg: i18n.t('toast.msg.uploadSuccess', '上传成功'),
+					duration: 2000,
+					location: 'bottom'
+				});
+			}
+		});
+    });
+
+    $api.addEvt($api.dom('.btn_logo'), 'click', function() {
+        if (backWin == "main") {
+            gotoMain();
+        } else {
+            gotoTask();
+        }
+	});
+
+    $api.addEvt($api.dom('.result-remark'), 'click', function() {
+        remarkTask(task.name);
+	});
+
+    apiready = function() {
+        loadLocale();
+        imgView = api.require('photoBrowser');
+        dialogBox = api.require('dialogBox');
+        api.addEventListener({
+            name: 'keyback'
+        }, function(ret, err) {
+            if (imgShow) {
+                imgShow = false;
+                imgView.close();
+            } else {
+                if (backWin == "main") {
+                    gotoMain();
+                } else {
+                    gotoTask();
+                }
+            }
+        });
+        api.addEventListener({
+            name: 'viewdisappear'
+        }, function(ret, err) {
+            api.closeWin('taskInfo');
+        });
+
+        $api.attr($api.dom('.chart'), 'width', api.winWidth);
+        $api.attr($api.dom('.chart'), 'height', api.winWidth * 2 / 3);
+        myChart = echarts.init(document.getElementById('chart'));
+        var property = $api.attr($api.dom('.r_tab .press'), 'data-property');
+
+        task = api.pageParam.task;
+        backWin = api.pageParam.back;
+
+        var taskTime = new Date(task.timestamp).Format('yyyy-MM-dd hh:mm:ss');
+        $api.text($api.dom('.result-time'), taskTime);
+        $api.text($api.dom('.result-collectNum'), task.data.dnList.length);
+        $api.text($api.dom('.result-period'), appConfig.device.period || 100);
+        $api.text($api.dom('.result-position'), task.position.streetName);
+
+        if (task.name && task.name.length > 0) {
+            $api.text($api.dom('.result-remark'), task.name);
+        }
+
+        if (task.imagePath) {
+            $api.css($api.dom('.task_img img'), "display:block;")
+            $api.attr($api.dom('.task_img img'), "src", task.imagePath);
+        }
+
+        var labels = [];
+        var range = task.device.spectralRange;
+        for (var i = range[0]; i < range[1]; i++) {
+            labels.push(1.9799 * i - 934.5831);
+        }
+        setTestResult(task.result);
+
+        DPTool.setXAxis(labels);
+        chartData = {
+            dn: DPTool.getData(task.data.dn, 0),
+            // radiance: DPTool.getRadiance(task.data, task.device.radianceA, task.device.radianceB),
+            reflectivity: DPTool.getReflectivity(task.data.dn, task.dc[0], task.dc[1])
+            // rmPacketLine: DPTool.getRmPacketLine(task.data, task.dc[0], task.dc[1])
+        }
+
+        initChat(property);
+    }
+
+    function initChat(property) {
+        var showConfig = {};
+        var datas;
+        showConfig.formatter = i18n.t('term.wavelength', '波长') + "：{b}nm <br/> {a} : {c}";
+    		switch (property) {
+    			case 'dn':
+    				showConfig.title = i18n.t('term.dn', 'DN值');
+    				datas = chartData[property];
+    				break;
+    			case 'radiance':
+    				showConfig.title = i18n.t('term.radiance', '辐亮度');
+    				datas = chartData[property];
+    				break;
+    			case 'reflectivity':
+    				showConfig.title = i18n.t('term.reflectivity', '反射率');
+    				showConfig.formatter = i18n.t('term.wavelength', '波长') + "：{b}nm <br/> {a} : {c}";
+    				datas = [];
+    				for (var i = 0; i < chartData[property].length; i++) {
+    					datas[i] = parseFloat(chartData[property][i]).toFixed(2);
+    				}
+    				break;
+    			case 'rmPacketLine':
+    				showConfig.title = i18n.t('term.rmPacketLine', '除去包格线');
+                datas = [];
+                for (var i = 0; i < chartData[property].length; i++) {
+                    datas[i] = parseFloat(chartData[property][i]).toFixed(2);
+                }
+                break;
+            default:
+
+        }
+        var option = initChartOption(showConfig, datas);
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    }
+
+    function setTestResult(result) {
+        if (result){
+            $.remove('.taskResult');
+            var n = 0;
+            var taskResult = null;;
+            for (var i = 0; i < result.data.length; i++) {
+                if (n++ == 0) {
+                    taskResult = '<div class="taskResult">';
+                }
+                var title = result.chineseName[i];
+                var unit = result.unit[i];
+                var decimal = 2;
+                if (result.decimal) {
+                    decimal = parseInt(result.decimal[i]);
+                }
+
+                var data = result.data[i] + "";
+                if (data.length > 6)
+                  data = data.substring(0, 6);
+                data = parseFloat(data).toFixed(decimal);
+                if (data < 0)
+        					data = i18n.t('invalid', '无效');
+
+                taskResult += '<p class="collect_average"><span class="text">' + title + '</span>';
+                taskResult += '<span class="line"></span>';
+                taskResult += '<span class="special">' + data + '</span><span class="unit">' + unit + '</span></p>';
+                if (n == 4){
+                    n = 0;
+                    taskResult += "</div>";
+                    var resultList = $api.domAll(".taskResult");
+                    if (resultList.length == 0){
+                        $.prepend('.collect_ul', taskResult);
+                    } else {
+                        $api.after(resultList[resultList.length - 1], taskResult);
+                    }
+                }
+            }
+            if (n > 0) {
+                taskResult += "</div>";
+                var resultList = $api.domAll(".taskResult");
+                if (resultList.length == 0){
+                    $.prepend('.collect_ul', taskResult);
+                } else {
+                    $api.after(resultList[resultList.length - 1], taskResult);
+                }
+            }
+        }
+        new Swipe(document.getElementById('slider'), {
+          startSlide: 0,
+          speed: 400,
+          auto: 5000,
+          continuous: true,
+          disableScroll: false,
+          stopPropagation: false,
+          callback: function(index, elem) {},
+          transitionEnd: function(index, elem) {}
+        });
+    }
+
+    function showImg(imagePath, name){
+        imgView.open({
+            images: [
+                imagePath
+            ],
+            bgColor: '#000'
+        }, function(ret, err) {
+            if (ret.eventType == "click"){
+                imgShow = false;
+                imgView.close();
+            } else if (ret.eventType == "show"){
+                imgShow = true;
+            }
+        });
+    }
+
+    function remarkTask(current) {
+		dialogBox.input({
+			keyboardType: 'forbid',
+			texts: {
+        title : i18n.t('input.texts.title.taskMark', '任务备注'),
+				default: current,
+				placeholder: i18n.t('input.texts.placeholder.taskMark', '备注信息'),
+				leftBtnTitle: i18n.t('cancel','取消'),
+				rightBtnTitle: i18n.t('ok','确定')
+			},
+			styles: dialogStyles,
+			tapClose: true
+		}, function(ret) {
+			dialogBox.close({
+				dialogName: 'input'
+			});
+			if (ret.eventType == 'left') {
+				// doSaveLocal(ret.text);
+			} else if (ret.eventType == 'right') {
+				if (ret.text <= 0 && ret.text > 32){
+					api.alert({
+              title: i18n.t('alert.title.inputError','输入错误'),
+						  msg: i18n.t('alert.msg.inputRangeError1-32','只能输入1-32之间的数'),
+              buttons : [i18n.t('ok','确定')]
+					});
+					return;
+				}
+                task.name = ret.text;
+                stTask.updateTaskInfo(task, function(ret, err){
+                    if (ret.status) {
+                        $api.text($api.dom('.result-remark'), task.name);
+                        if (task.isUpload)
+                            stTask.sendTaskToRemoteById(task.id);
+                    } else {
+                        api.alert({
+                            title: i18n.t('toast.msg.saveFailed', '保存失败'),
+                            msg: ret.err.msg,
+                            buttons : [i18n.t('ok','确定')]
+                        });
+                    }
+                });
+			}
+		});
+	};
+
+</script>

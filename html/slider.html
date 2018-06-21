@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>Hyscan</title>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+    <script type="text/javascript" src="../script/lib/skin.js"></script>
+    <script>
+        skinUtil.loadSkin(["skin", "additional"]);
+    </script>
+    <link rel="stylesheet" type="text/css" href="../css/additional.css" />
+</head>
+
+<body>
+    <!-- 侧登陆模块 -->
+    <div class="sidebar">
+        <div class="s_left">
+            <div class="head">
+                <img src="../img/default_avatar_male_180.gif" class="h_img"/> <span id="gotoLogin" data-status="logout" data-i18n="view.clickToLogin">点击登录</span>
+            </div>
+            <ul class="nav">
+                <li>
+                    <span id='setup' data-i18n="view.systemSetup">系统设置</span>
+                </li>
+                <li>
+                    <span id='deviceInfo' data-i18n="view.deviceInfo">设备信息</span>
+                </li>
+                <li>
+                    <span id='about' data-i18n="view.aboutHyScan">关于HyScan</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script>
+    // console.log("do loadLocale");
+    // loadLocale();
+    // console.log("end loadLocale")
+    $api.addEvt($api.dom('#setup'), 'click', function() {
+        api.openWin({
+            name: 'setup',
+            url: './setup.html'
+        });
+
+    });
+
+    $api.addEvt($api.dom('#deviceInfo'), 'click', function() {
+        if (appConfig.device) {
+            api.openWin({
+                name: 'equipment',
+                url: './equipment.html'
+            });
+        } else {
+            api.confirm({
+                title: i18n.t('confirm.title.noBindingDevice','没有绑定设备'),
+                msg: i18n.t('confirm.msg.noBindingDevice','没有绑定设备，是否现在绑定？'),
+                buttons: [i18n.t('confirm.btn.binding','绑定'), i18n.t('cancel','取消')]
+            }, function(ret, err){
+                if (ret.buttonIndex == 1) {
+                    gotoScanDevice();
+                }
+            });
+
+        }
+    });
+
+    $api.addEvt($api.dom('#about'), 'click', function() {
+        api.alert({
+            title: 'HyScan',
+            msg: 'V' + api.appVersion,
+            buttons : [i18n.t('ok','确定')]
+        }, function(ret, err) {
+
+        });
+    });
+
+    $api.addEvt($api.dom('#gotoLogin'), 'click', function() {
+      var status =   $api.attr($api.dom('#gotoLogin'), "data-status");
+      if (status == 'logout'){
+          api.openWin({
+              name: 'login',
+              url: './login.html'
+          });
+      } else {
+          gotoMe();
+      }
+    });
+
+    apiready = function() {
+          if (!isLoad) loadAppConfig();
+          loadLocale();
+          if (appConfig.isLogin){
+              getUserDetails(appConfig.token, function(ud, err){
+                  if (ud) {
+                      appConfig.isLogin = true;
+                      appConfig.loginName = ud.fullName;
+                      appConfig.user = ud;
+                      saveAppConfig();
+                      var headImg = null;
+                      if (ud.avatar) {
+                          headImg = ud.avatar;
+                      } else if (ud.avatarHd) {
+                           headImg = ud.avatarHd;
+                      }
+                      if (headImg)
+                          $api.attr($api.dom('.h_img'), 'src', headImg);
+                      $api.text($api.dom('#gotoLogin'), appConfig.loginName);
+                      $api.attr($api.dom('#gotoLogin'), "data-status", "login");
+                  }  else {
+                      if (err.statusCode == 401) {
+                          logout(function(){
+                              api.toast({
+                                  msg: i18n.t('toast.msg.expires','登录过期，需要重新登录'),
+                                  duration: 2000,
+                                  location: 'top'
+                              });
+                          })
+                      }
+                  }
+              })
+          } else {
+              $api.attr($api.dom('#gotoLogin'), "data-status", "logout");
+              $api.text($api.dom('#gotoLogin'), i18n.t('view.clickToLogin','点击登录'));
+          }
+    }
+</script>

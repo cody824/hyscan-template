@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+	<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<script type="text/javascript" src="../script/lib/skin.js"></script>
+	<script>
+        skinUtil.loadSkin(["skin", "additional"]);
+	</script>
+	<title>设置</title>
+</head>
+
+<body>
+	<div class="title">
+		<span class="btn_logo">
+				<img src="../img/left_arrow.png" />
+			</span> <span data-i18n="view.setup">设置</span>
+	</div>
+	<ul class="set-box">
+		<li class="clearfix li1">
+			<span class="small-ico"></span>
+			<span class="ico-name" data-i18n="view.binding">绑定</span>
+			<span class="btn" id='unbunding' data-i18n="view.unbunding">解绑</span>
+			<span class="ico-info" id="bindStatus">已绑定</span>
+		</li>
+		<li class="clearfix kg" id="lightSetupLi">
+			<span class="small-ico ico5"></span>
+			<span class="ico-name" data-i18n="view.lightSwitch">光源开关</span>
+			<span class="btn special lightOff" data-i18n="view.turnOff">关闭</span>
+			<span class="btn lightOn" data-i18n="view.turnOn">开启</span>
+		</li>
+		<li class="clearfix jf" id="periodLi">
+			<span class="small-ico ico2"></span>
+			<span class="ico-name" data-i18n="view.integrationPeriod">积分时间</span>
+			<span class="ico-info ico-info2"><span id="period">255</span>ms</span>
+		</li>
+		<li class="clearfix cj" id="collectNumLi">
+			<span class="small-ico ico3"></span>
+			<span class="ico-name"  data-i18n="view.timesOfAcquiring">平均采集次数</span>
+			<span class="ico-info ico-info3"><span id="collectNum">5</span><span data-i18n="times">次</span></span>
+		</li>
+		<li class="clearfix" id='paramSetupLi'>
+			<span class="small-ico ico4"></span>
+			<span class="ico-name"   data-i18n="view.drSetup">光谱定标设置</span>
+			<span class="ico-info"></span>
+		</li>
+		<li class="clearfix ms" id='modeSetupLi'>
+			<span class="small-ico ico6"></span>
+			<span class="ico-name"   data-i18n="view.collectMode">采集模式</span>
+			<span class="ico-info"></span>
+		</li>
+		<li class="clearfix" id='targetTypeSetupLi'>
+			<span class="small-ico ico-target"></span>
+			<span class="ico-name" data-i18n="view.targetType">目标类型</span>
+			<span class="ico-info ico-info5">未知</span>
+		</li>
+		<li class="clearfix" id='langSetupLi'>
+			<span class="small-ico ico7"></span>
+			<span class="ico-name" data-i18n="view.language">语言</span>
+			<span class="ico-info ico-info5">简体中文</span>
+		</li>
+		<li class="clearfix">
+			<span class="small-ico ico1"></span>
+			<span class="ico-name" data-i18n="view.dataDir">数据位置</span>
+			<span class="ico-info  ico-info2 data-position" ></span>
+		</li>
+		<li class="clearfix" id='serverIpSetupLi' style="display:none;">
+			<span class="small-ico ico1"></span>
+			<span class="ico-name">服务器地址</span>
+			<span class="ico-info  ico-info2"><span id="serverIp"></span></span>
+		</li>
+	</ul>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script type="text/javascript" src="../script/spp.js"></script>
+<script type="text/javascript" src="../script/device.js"></script>
+<script>
+	loadLocale();
+	var dialogBox;
+	var switchBtn;
+	var languageSelector = null;
+	var connect = false;
+
+	var cn = appConfig.globalConfig.collectNum || 1;
+	var serverIp = appConfig.globalConfig.serverIp || "";
+	var devicePeriod = 100;
+	var sysLang = navigator.language;
+	if (!globalConfig.lang[sysLang]) {
+		sysLang = globalConfig.defaultLang;
+	}
+	var lang = appConfig.globalConfig.lang || sysLang;
+	var langShow = globalConfig.lang[lang];
+	$api.text($api.dom('#langSetupLi .ico-info5'), langShow);
+
+
+	$api.text($api.dom('#collectNum'), cn);
+	$api.text($api.dom('#serverIp'), serverIp);
+	if (appConfig.device) {
+		devicePeriod = appConfig.device.period ? appConfig.device.period : devicePeriod;
+		$api.text($api.dom('#bindStatus'), i18n.t("view.bound","已绑定"));
+		$api.text($api.dom('#unbunding'), i18n.t('view.unbunding',"解绑"));
+	} else {
+		$api.text($api.dom('#bindStatus'), i18n.t('view.unbound',"未绑定"));
+		$api.text($api.dom('#unbunding'), i18n.t('view.bunding',"绑定"));
+	}
+	if (isDev) {
+		$api.css($api.dom("#serverIpSetupLi"), 'display:block;');
+	}
+	$api.text($api.dom('#period'), devicePeriod);
+
+	apiready = function() {
+		dialogBox = api.require('dialogBox');
+		api.addEventListener({
+			name: 'keyback'
+		}, function(ret, err) {
+			gotoBack();
+		});
+		setTimeout(function(){
+			if (!appConfig.device)
+				return;
+			api.showProgress({
+			    style: 'default',
+			    animationType: 'fade',
+			    title: '设备连接中...',
+			    text: '先喝杯茶...',
+			    modal: true
+			});
+			setTimeout(function(){
+				sppUtil.init(function() {
+					stDevice.isDeviceOk(function(ret) {
+						api.hideProgress();
+						if (ret.status >= 0) {
+							console.log("deviceOk");
+							hyCmd.receive(appConfig.device.address, {
+									batteryInfo : function(){
+											if (appConfig.device.batteryInfo <= globalConfig.batteryAlarm){
+												api.toast({
+														msg: i18n.t('toast.msg.batteryAlarm', "电量过低，请及时充电"),
+														duration: 10000,
+														location: 'top'
+												});
+											}
+									}
+							});
+
+						} else {
+							api.toast({
+							    msg: '设备未开启或者未绑定',
+							    duration: 2000,
+							    location: 'bottom'
+							});
+						}
+					})
+				});
+			}, 500);
+		}, 500);
+		switchBtn = api.require('UISwitchButton');
+		modeSwitch(appConfig.globalConfig.collectMode || false);
+		$api.text($api.dom('.data-position'), "/UZMap/" + api.appId + "/task");
+		var defaultTarget = $api.getStorage("defaultTarget");
+		if (!defaultTarget) {
+            $api.css($api.dom('#targetTypeSetupLi'), 'display:none');
+		}
+		var targetType = appConfig.globalConfig.targetType || defaultTarget;
+		if (targetType) {
+            $api.text($api.dom('#targetTypeSetupLi .ico-info5'), targetType);
+		}
+	}
+
+	$api.addEvt($api.dom('.data-position'), 'click', function() {
+		api.alert({
+		    title: i18n.t('alert.title.storePath', '任务数据存储位置'),
+		    msg: "/UZMap/" + api.appId + "/task",
+				buttons : [i18n.t('ok','确定')]
+		});
+	});
+
+
+	$api.addEvt($api.dom('.btn_logo'), 'click', function() {
+		gotoBack();
+	});
+
+	$api.addEvt($api.dom('#paramSetupLi'), 'click', function() {
+		sppUtil.disconnectDevice(appConfig.device.address, function(ret) {
+			gotoRevise();
+		});
+	});
+
+	$api.addEvt($api.dom('#langSetupLi'), 'click', function() {
+		var datas = [];
+		for (var key in globalConfig.lang){
+			var data = {name : globalConfig.lang[key], value : key};
+			datas.push(data);
+		}
+		languageSelector = api.require("UIActionSelector");
+		languageSelector.open({
+			datas: datas,
+			layout: {
+				row: 3,
+				col: 1,
+				height: 30,
+		        size: 12,
+		        sizeActive: 14,
+				rowSpacing: 5,
+				colSpacing: 10,
+				maskBg: 'rgba(0,0,0,0.2)',
+				bg: '#fff',
+				color: '#888',
+				colorActive: '#f00',
+				colorSelected: '#f00'
+			},
+			animation: true,
+			cancel: {
+				text: i18n.t('cancel','取消'),
+				// size: 12,
+				// w: 90,
+				// h: 35,
+				// bg: '#fff',
+				bgActive: '#ccc',
+				// color: '#888',
+				colorActive: '#fff'
+			},
+			ok: {
+				text: i18n.t('ok','确定'),
+				// size: 12,
+				// w: api.winWidth/3,
+				// h: 40,
+				// bg: '#fff',
+				bgActive: '#ccc',
+				// color: '#888',
+				colorActive: '#fff'
+			},
+			title: {
+				text: i18n.t('selector.title.language','请选择语言'),
+				// size: 12,
+				// h: 44,
+				// bg: '#eee',
+				// color: '#888'
+			},
+			fixedOn: api.frameName
+		}, function(ret, err) {
+			if (ret) {
+				if (ret.eventType == "ok"){
+					var select = ret.selectedInfo[0].value;
+					appConfig.globalConfig.lang = select;
+					saveAppConfig();
+					$api.text($api.dom('#langSetupLi .ico-info5'), ret.selectedInfo[0].name);
+					clearLocale(select);
+					loadLocale(select);
+					window.location.reload();
+				}
+			} else {
+				console.log(JSON.stringify(err));
+			}
+		});
+	});
+
+    $api.addEvt($api.dom('#targetTypeSetupLi'), 'click', function() {
+        var datas = [];
+        var targetRepo = $api.getStorage("targetTypes");
+        console.log(targetRepo);
+        for (var i = 0; i < targetRepo.length; i++){
+            var data = {name : targetRepo[i], value : targetRepo[i]};
+            datas.push(data);
+        }
+        languageSelector = api.require("UIActionSelector");
+        languageSelector.open({
+            datas: datas,
+            layout: {
+                row: 3,
+                col: 1,
+                height: 30,
+                size: 12,
+                sizeActive: 14,
+                rowSpacing: 5,
+                colSpacing: 10,
+                maskBg: 'rgba(0,0,0,0.2)',
+                bg: '#fff',
+                color: '#888',
+                colorActive: '#f00',
+                colorSelected: '#f00'
+            },
+            animation: true,
+            cancel: {
+                text: i18n.t('cancel','取消'),
+                bgActive: '#ccc',
+                colorActive: '#fff'
+            },
+            ok: {
+                text: i18n.t('ok','确定'),
+                bgActive: '#ccc',
+                colorActive: '#fff'
+            },
+            title: {
+                text: i18n.t('selector.title.targetType','请选择目标类型')
+            },
+            fixedOn: api.frameName
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.eventType == "ok"){
+                    var select = ret.selectedInfo[0].value;
+                    $api.text($api.dom('#targetTypeSetupLi .ico-info5'), ret.selectedInfo[0].name);
+                    appConfig.globalConfig.targetType = select;
+                    saveAppConfig();
+                }
+            } else {
+                console.log(JSON.stringify(err));
+            }
+        });
+    });
+
+	$api.addEvt($api.dom('#unbunding'), 'click', function() {
+		if (!appConfig.device) {
+			gotoScanDevice();
+			return;
+		}
+
+		dialogBox.confirm({
+			tapClose: false,
+			msg: {
+				content: i18n.t('confirm.msg.makeSureUnbinding','确认要解绑设备吗'),
+				leftBtnTitle: i18n.t('cancel','取消'),
+				rightBtnTitle: i18n.t('ok','确定')
+			},
+			styles: {
+				bg: '#fff',
+				maskBg: 'rgba(0,0,0,0.5)',
+				h: 200,
+				msg: {
+					color: '#00DEFF',
+					size: 20,
+					maginLR: 100,
+					maginT: 50
+				},
+				leftBtn: {
+					borderColor: 'rgba(0,0,0,0)',
+					color: '#007FFF',
+					size: 14
+				},
+				rightBtn: {
+					bg: 'rgba(0,0,0,0)',
+					selectedBg: '#F00',
+					color: '#007FFF',
+					size: 14
+				}
+			}
+		}, function(ret) {
+			dialogBox.close({
+				dialogName: 'confirm'
+			});
+			if (ret.eventType == "ok") {
+				appConfig.device = null;
+				saveAppConfig();
+				gotoMain();
+			}
+		});
+	});
+	$api.addEvt($api.dom('#periodLi'), 'click', function() {
+		var num = $api.text($api.dom('#period'));
+		setupPeriod(num);
+	});
+	$api.addEvt($api.dom('#collectNumLi'), 'click', function() {
+		var num = $api.text($api.dom('#collectNum'));
+		setupCollectNum(num);
+	});
+	$api.addEvt($api.dom('#serverIpSetupLi'), 'click', function() {
+		var serverIp = $api.text($api.dom('#serverIp'));
+		setupServerIp(serverIp);
+	});
+
+	$api.addEvt($api.dom('#lightSetupLi .lightOn'), 'click', function() {
+		if (appConfig.device) {
+			api.toast({
+			    msg: i18n.t('toast.msg.turnOnLight', '打开光源'),
+			    duration: 2000,
+			    location: 'bottom'
+			});
+			hyCmd.lightOn(appConfig.device.address);
+		} else {
+			api.alert({
+				title:  i18n.t('alert.title.deviceNotConnected','设备未连接'),
+				msg: i18n.t('alert.msg.pleaseConnectDevice','请连接设备'),
+				buttons : [i18n.t('ok','确定')]
+			});
+		}
+
+	});
+
+	$api.addEvt($api.dom('#lightSetupLi .lightOff'), 'click', function() {
+		if (appConfig.device) {
+			api.toast({
+			    msg: i18n.t('toast.msg.turnOffLight', '关闭光源'),
+			    duration: 2000,
+			    location: 'bottom'
+			});
+			hyCmd.lightOff(appConfig.device.address);
+		} else {
+			api.alert({
+				title:  i18n.t('alert.title.deviceDisconnect','设备未连接'),
+				msg: i18n.t('alert.msg.pleaseConnectDevice','请连接设备'),
+				buttons : [i18n.t('ok','确定')]
+			});
+		}
+	});
+
+	function modeSwitch(status) {
+		var modeOffet = $api.offset($api.dom("#modeSetupLi"));
+		switchBtn.open({
+			id: 'modeSwitch',
+			state: status,
+			rect: {
+				x: api.winWidth - 70,
+				y: modeOffet.t + 17,
+				w: 50,
+				h: 25
+			},
+			styles: {
+				bgCorner: 5,
+				active: '#4fd35e',
+				inActive: '#DDD',
+				thumb: {
+					active: '#eeeeee',
+					inActive: '#eeeeee',
+					size: 25,
+					corner: 5
+				}
+			},
+			fixedOn: '',
+			fixed: true
+		}, function(ret) {
+			appConfig.globalConfig.collectMode = ret.state;
+			saveAppConfig();
+		});
+	}
+
+	function setupCollectNum(current) {
+		dialogBox.input({
+			keyboardType: 'number',
+			texts: {
+				title: i18n.t('input.title.timesOfAcquiring','平均采集次数'),
+				default: current,
+				placeholder:i18n.t('input.placeholder.timesOfAcquiring','请输入1-10的数字') ,
+				leftBtnTitle: i18n.t('cancel','取消'),
+				rightBtnTitle: i18n.t('ok','确定')
+			},
+			styles: dialogStyles,
+			tapClose: true
+		}, function(ret) {
+			console.log(JSON.stringify(ret));
+			dialogBox.close({
+				dialogName: 'input'
+			});
+
+			if (ret.eventType == 'left') {
+				// doSaveLocal(ret.text);
+			} else if (ret.eventType == 'right') {
+				var collectNum = parseInt(ret.text);
+				if (collectNum == 5148) {//开发模式
+					var dev = $api.getStorage('isDev') || false;
+					dev = dev == "true" ? true : false;
+					console.log("Develop mode：" + !dev);
+					$api.setStorage('isDev', !dev);
+					return;
+				}
+				if (collectNum < 1 || collectNum > 10) {
+					api.alert({
+						title: i18n.t('alert.title.inputError','输入错误'),
+						msg: i18n.t('alert.msg.inputRangeError1-10','只能输入1-10之间的数'),
+            buttons : [i18n.t('ok','确定')]
+					});
+					return;
+				}
+				// doSaveRemote(ret.text);
+				appConfig.globalConfig.collectNum = collectNum;
+				saveAppConfig();
+				$api.text($api.dom('#collectNum'), ret.text);
+			}
+		});
+	}
+
+	function setupPeriod(current) {
+		dialogBox.input({
+			keyboardType: 'number',
+			texts: {
+				title: i18n.t('input.title.integrationPeriod','积分时间(ms)'),
+				default: current,
+				placeholder:i18n.t('input.placeholder.integrationPeriod','单位毫秒') ,
+				leftBtnTitle: i18n.t('cancel','取消'),
+				rightBtnTitle: i18n.t('ok','确定')
+			},
+			styles: dialogStyles,
+			tapClose: true
+		}, function(ret) {
+			dialogBox.close({
+				dialogName: 'input'
+			});
+
+			if (ret.eventType == 'left') {
+				// doSaveLocal(ret.text);
+			} else if (ret.eventType == 'right') {
+				var period = parseInt(ret.text);
+				if (period > 255 || period < 1) {
+					api.alert({
+						title: i18n.t('alert.title.inputError','输入错误'),
+						msg: i18n.t('alert.msg.inputRangeError1-255','只能输入1-255之间的数'),
+            buttons : [i18n.t('ok','确定')]
+					});
+					return;
+				}
+                var maxPeriod = $api.getStorage('maxPeriod');
+				if (maxPeriod) {
+                    period = period > maxPeriod? maxPeriod : period;
+				}
+				if (appConfig.device) {
+					appConfig.device.period = period;
+					saveAppConfig();
+				}
+				$api.text($api.dom('#period'), ret.text);
+			}
+		});
+	}
+
+	function setupServerIp(current) {
+		dialogBox.input({
+			keyboardType: 'forbid',
+			texts: {
+				title: '服务器IP',
+				default: current,
+				placeholder: '请输入服务器IP',
+				leftBtnTitle: i18n.t('cancel','取消'),
+				rightBtnTitle: i18n.t('ok','确定')
+			},
+			styles: dialogStyles,
+			tapClose: true
+		}, function(ret) {
+			dialogBox.close({
+				dialogName: 'input'
+			});
+
+			if (ret.eventType == 'right') {
+				var serverIp = ret.text;
+				appConfig.globalConfig.serverIp = serverIp;
+				saveAppConfig();
+				loadAppConfig();
+				$api.text($api.dom('#serverIp'), ret.text);
+			}
+		});
+	}
+
+</script>

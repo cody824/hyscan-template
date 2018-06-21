@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <title>APP</title>
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <script type="text/javascript" src="../../script/lib/skin.js"></script>
+    <script>
+        skinUtil.loadSkin(["skin", "additional"],null, null, "../..");
+    </script>
+    <link rel="stylesheet" type="text/css" href="../../css/additional.css" />
+</head>
+<style type="text/css">
+body {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+</style>
+<body>
+    <div class="item-pop-add">
+    	<div class="item-left-add">
+        	<span class="text"><span data-i18n="view.hereHas">此处共</span><span class="tasks_num">10</span><span data-i18n="view.taskNum">条数据</span>
+        </div>
+        <div class="item-right-add">
+        	<span data-i18n="view.viewDetail">查看详情</span>
+        </div>
+    </div>
+</body>
+</html>
+<script type="text/javascript" src="../../../script/api.js"></script>
+<script type="text/javascript" src="../../script/sameAsJq.js"></script>
+<script type="text/javascript" src="../../script/app.js"></script>
+<script type="text/javascript" src="../../script/locale.js"></script>
+<script type="text/javascript" src="../../script/navi.js"></script>
+<script>
+    var tasks;
+    $api.addEvt($api.dom(".item-right-add"), 'click', function(){
+        gotoTask(tasks);
+        api.closeFrame({
+            name: 'mapTaskList'
+        });
+    });
+    apiready = function(){
+        loadLocale();
+        tasks = api.pageParam.annotation.tasks;
+        $api.text($api.dom('.tasks_num'), tasks.length);
+    }
+</script>

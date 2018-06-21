@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <title>APP</title>
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <script type="text/javascript" src="../../script/lib/skin.js"></script>
+    <script>
+        skinUtil.loadSkin(["skin", "additional"],null, null, "../..");
+    </script>
+    <link rel="stylesheet" type="text/css" href="../../css/additional.css" />
+</head>
+<style type="text/css">
+    body {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+</style>
+
+<body>
+    <div class="detail-pop-add">
+        <div class="details_contents_add">
+            <div class="contents">
+                <img class="my-img" src="" />
+                <div class="my-con-add">
+                    <p class="my-con-title-add" data-i18n="view.detectionResult">检测结果</p>
+                    <p class="con-para"><span class="para-left resultName0"></span><span class="para-right result0"></span><span class="unit0"></span></p>
+                    <p class="con-para"><span class="para-left resultName1"></span><span class="para-right result1"></span><span class="unit1"></span></p>
+                    <p class="con-para"><span class="para-left resultName2"></span><span class="para-right result2"></span><span class="unit2"></span></p>
+                    <p class="con-para"><span class="para-left resultName3"></span><span class="para-right result3"></span><span class="unit3"></span></p>
+                </div>
+            </div>
+            <p class="my-info"><span class="info-wri info-wri2 task_timestamp">2017-09-16</span></p>
+        </div>
+    </div>
+</body>
+
+</html>
+<script type="text/javascript" src="../../../script/api.js"></script>
+<script type="text/javascript" src="../../script/sameAsJq.js"></script>
+<script type="text/javascript" src="../../script/app.js"></script>
+<script type="text/javascript" src="../../script/locale.js"></script>
+<script type="text/javascript" src="../../script/task.js"></script>
+<script type="text/javascript" src="../../script/navi.js"></script>
+<script>
+    var task;
+    $api.addEvt($api.dom(".detail-pop-add"), 'click', function() {
+        stTask.getTask(task.id, true, function(ret) {
+            if (ret.status)
+                gotoTaskInfo(ret.task, "main");
+            api.closeFrame({
+                name: 'mapTaskInfo'
+            });
+        });
+    });
+    apiready = function() {
+        loadLocale();
+        task = api.pageParam.annotation.tasks[0];
+        if (task.result) {
+            var n = 0;
+            var max = task.result.chineseName.length > 4 ? 4: task.result.chineseName.length;
+            for (var i = 0; i < max; i++){
+              var name = task.result.chineseName[i].replace(new RegExp("&nbsp;","gm"), " ");
+              var result = parseFloat(task.result.data[i]).toFixed(parseInt(task.result.decimal[i]));
+              var unit = task.result.unit[i].replace(new RegExp("&nbsp;","gm"), " ");
+              $api.text($api.dom('.resultName' + i), name + "：");
+              $api.text($api.dom('.result' + i), result);
+              $api.text($api.dom('.unit' + i), unit);
+            }
+        } else {
+            $api.text($api.dom('.my-con-title'), i18n.t('view.notDetectAndClickToDetect','没有检测，点击检测'));
+        }
+        var taskTime = new Date(task.timestamp).Format('yyyy-MM-dd hh:mm:ss');
+        $api.text($api.dom('.task_timestamp'), taskTime);
+        $api.attr($api.dom('.my-img'), 'src', task.imagePath);
+        console.log(task.imagePath);
+    }
+</script>

@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>主界面</title>
+    <script type="text/javascript" src="../../script/api.js"></script>
+    <script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+    <script type="text/javascript" src="../script/lib/skin.js"></script>
+    <script>
+        skinUtil.loadSkin(["skin", "additional"]);
+    </script>
+    <link rel="stylesheet" type="text/css" href="../css/additional.css" />
+</head>
+
+<body>
+    <div class="title">
+        <span class="user_info">
+				<img src="../img/setup.png" />
+			</span>
+        <a class="task" href="javascript:gotoTask();"></a>
+        HyScan
+    </div>
+</body>
+
+</html>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script type="text/javascript" src="../script/task.js"></script>
+<script type="text/javascript" src="../script/device.js"></script>
+<script type="text/javascript" src="../script/spp.js"></script>
+<script type="text/javascript" src="../script/map.js"></script>
+<script type="text/javascript">
+    var map;
+    var currentTasks = null;//当前的任务列表
+    $api.addEvt($api.dom('.user_info'), 'click', function() {
+        api.openDrawerPane({
+            type: 'left'
+        });
+    });
+
+    apiready = function() {
+        init();//defined in app.js
+        loadLocale();
+        stTask.findTask(function(tasks) {
+            currentTasks = tasks;
+        });
+        map = api.require('bMap');
+        api.addEventListener({
+            name: 'viewdisappear'
+        }, function(ret, err) {
+            map.close();
+        });
+        api.addEventListener({
+            name: 'getCurrentLocation'
+        }, function(ret, err){
+            map.getCurrentLocation(
+            function(ret, err) {
+                if (ret.status){
+                  map.setCenter({
+                      coords: {
+                          lon: ret.lon,
+                          lat: ret.lat
+                      },
+                      animation:true
+                  });
+                }else {
+                  api.alert({
+                      msg: i18n.t('alert.msg.locationFailed', '定位失败'),
+                      buttons : [i18n.t('ok', '确定')]
+                  });
+                }
+            });
+        });
+
+        api.addEventListener({
+            name: 'zoomIn'
+        }, function(ret, err){
+           map.zoomIn();
+        });
+
+        api.addEventListener({
+            name: 'zoomOut'
+        }, function(ret, err){
+           map.zoomOut();
+        });
+
+        api.addEventListener({
+            name: 'viewappear'
+        }, function(ret, err) {
+            openMap(function() {
+                api.openFrame({
+                    name: 'bmapButton',
+                    url: 'map/collectBtn.html',
+                    rect: {
+                        x: api.frameWidth / 2 - 30,
+                        y: api.frameHeight / 5 * 4,
+                        w: 60,
+                        h: 60
+                    },
+                    bounces: false,
+                    vScrollBarEnabled: false,
+                    hScrollBarEnabled: false
+                });
+                api.openFrame({
+                    name: 'locationButton',
+                    url: 'map/locationBtn.html',
+                    rect: {
+                        x: 30,
+                        y: api.frameHeight / 8 * 7,
+                        w: 60,
+                        h: 60
+                    },
+                    bounces: false,
+                    vScrollBarEnabled: false,
+                    hScrollBarEnabled: false
+                });
+                api.openFrame({
+                    name: 'zoomButton',
+                    url: 'map/zoomBtn.html',
+                    rect: {
+                        x: api.frameWidth - 54,
+                        y: api.frameHeight / 8 * 7 - 24,
+                        w: 60,
+                        h: 60
+                    },
+                    bounces: false,
+                    vScrollBarEnabled: false,
+                    hScrollBarEnabled: false
+                });
+                updateTaskView(map, $api.getStorage("lastZoomLevel") || 13, currentTasks, true);//更新标注
+                map.addEventListener({
+                    name: 'viewChange'
+                }, function(ret) {
+                    if (ret.status) {
+                        $api.setStorage('lastCenter', {
+                            lon : ret.lon,
+                            lat : ret.lat
+                        });
+                        $api.setStorage('lastZoomLevel', ret.zoom);
+                        updateTaskView(map, ret.zoom, currentTasks);//更新标注
+                    }
+                });
+                map.addEventListener({
+                    name: 'click'
+                }, function(ret) {
+                    console.log(ret);
+                    api.closeFrame({
+                        name: 'mapTaskInfo'
+                    });
+                    api.closeFrame({
+                        name: 'mapTaskList'
+                    });
+                });
+
+            });
+        });
+
+        if(appConfig.device.address){
+            sppUtil.init(function(){
+                sppUtil.connectDevice(appConfig.device.address, function(ret){
+                    if (ret.status) {
+                        hyCmd.lightOff(appConfig.device.address);
+                        sppUtil.disconnectDevice(appConfig.device.address);
+                    }
+                });
+            });
+        }
+    }
+
+    function openMap(callback) {
+        var lastRegion = $api.getStorage("lastRegion");//最后的显示区域
+        var lastZoomLevel = $api.getStorage("lastZoomLevel") || 13;//最后的缩放等级
+        var lastCenter = $api.getStorage("lastCenter");
+        var options = {
+            rect: {
+                y: 65 //（可选项）数字类型；地图左上角的 y 坐标（相对于所属的 Window 或 Frame）；默认：0
+                    //h: 480 //（可选项）数字类型；地图的高度；默认：所属的 Window 或 Frame 的高度
+            },
+            zoomLevel: lastZoomLevel,
+            showUserLocation: true,
+            fixedOn: api.frameName,
+            fixed: true
+        };
+        if (lastCenter != null){
+            options.center = lastCenter;
+        }
+        map.open(options, function(ret, err) {
+            if (ret.status) {
+                callback();
+            }
+        });
+    }
+
+</script>

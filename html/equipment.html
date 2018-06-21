@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<script type="text/javascript" src="../script/lib/skin.js"></script>
+	<script>
+        skinUtil.loadSkin();
+	</script>
+	<title>设备</title>
+</head>
+
+<body style="position: relative; background-image:url(../img/main_bg.jpg);background-repeat:no-repeat;background-size:cover; background-attachment: fixed;">
+	<div class="title" style="background:none;">
+		<span class="btn_logo">
+				<img src="../img/left_arrow.png" />
+			</span> <span data-i18n="view.device">设备</span>
+	</div>
+	<div class="head-box equipment">
+		<img class="eq-img" src="../img/scanning_img.png" />
+		<p class="eq-name" data-i18n="view.deviceDesc">便携式手持光谱仪</p>
+		<p class="eq-number"></p>
+	</div>
+	<ul class="eq-box">
+		<li class="clearfix">
+			<span class="small-ico"></span>
+			<span class="ico-name" data-i18n="view.seriesNumber">序列号</span>
+			<span class="ico-info serialNum"></span>
+		</li>
+		<li class="clearfix">
+			<span class="small-ico ico2"></span>
+			<span class="ico-name" data-i18n="view.firmwareVersion">固件版本</span>
+			<span class="ico-info firmware"></span>
+		</li>
+		<li class="clearfix">
+			<span class="small-ico ico3"></span>
+			<span class="ico-name" data-i18n="view.battery">电池电量</span>
+			<span class="ico-info batteryInfo"></span>
+		</li>
+	</ul>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/spp.js"></script>
+<script type="text/javascript" src="../script/device.js"></script>
+<script>
+	$api.addEvt($api.dom('.btn_logo'), 'click', function() {
+		gotoBack();
+	});
+	updateInfo();
+
+	apiready = function() {
+		loadLocale();
+		setTimeout(function(){
+			api.showProgress({
+			    style: 'default',
+			    animationType: 'fade',
+			    title: '设备连接中...',
+			    text: '先喝杯茶...',
+			    modal: true
+			});
+			setTimeout(function(){
+				sppUtil.init(function() {
+					stDevice.isDeviceOk(function(ret) {
+						api.hideProgress();
+						if (ret.status >= 0) {
+							stDevice.readDeviceInfo(appConfig.device.address, function() {
+								updateInfo();
+								if (appConfig.device.batteryInfo <= globalConfig.batteryAlarm){
+									api.toast({
+											msg: i18n.t('toast.msg.batteryAlarm', "电量过低，请及时充电"),
+											duration: 10000,
+											location: 'top'
+									});
+								}
+							});
+						}else {
+							api.toast({
+							    msg: '设备未开启或者未绑定',
+							    duration: 2000,
+							    location: 'bottom'
+							});
+						}
+					})
+				});
+			}, 500);
+		}, 500);
+		api.addEventListener({
+            name: 'keyback'
+        }, function(ret, err) {
+			gotoBack();
+		});
+	}
+
+	function updateInfo() {
+		if (appConfig.device) {
+			if (appConfig.device.model)
+				$api.text($api.dom('.eq-number'), appConfig.device.model);
+			if (appConfig.device.serial)
+				$api.text($api.dom('.serialNum'), appConfig.device.serial);
+			if (appConfig.device.firmware)
+				$api.text($api.dom('.firmware'), appConfig.device.firmware);
+			if (appConfig.device.batteryInfo)
+				$api.text($api.dom('.batteryInfo'), appConfig.device.batteryInfo + "%");
+		}
+	}
+
+</script>

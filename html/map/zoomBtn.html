@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <title>APP</title>
+</head>
+<style type="text/css">
+body {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+#zoomOut {
+    background-image: url('../../img/map/zoomOut.png');
+    background-size: 28px 28px;
+    width: 28px;
+    height: 28px;
+    box-shadow: 2px 3px 2px 1px #ccc;
+}
+#zoomOut:active{
+    background-image: url('../../img/map/zoomOutActive.png');
+    box-shadow: 0px 0px 0px 0px;
+}
+#zoomIn {
+    background-image: url('../../img/map/zoomIn.png');
+    background-size: 28px 28px;
+    width: 28px;
+    height: 28px;
+    box-shadow: 2px 3px 2px 1px #ccc;
+}
+#zoomIn:active{
+    background-image: url('../../img/map/zoomInActive.png');
+    box-shadow: 0px 0px 0px 0px;
+}
+</style>
+<body>
+    <div id="zoomOut"></div>
+    <div id="zoomIn"></div>
+</body>
+</html>
+<script type="text/javascript" src="../../../script/api.js"></script>
+<script type="text/javascript" src="../../script/sameAsJq.js"></script>
+<script type="text/javascript" src="../../script/app.js"></script>
+<script type="text/javascript" src="../../script/locale.js"></script>
+<script type="text/javascript" src="../../script/navi.js"></script>
+<script type="text/javascript" src="../../script/spp.js"></script>
+<script type="text/javascript" src="../../script/device.js"></script>
+<script>
+    $api.addEvt($api.dom("#zoomOut"), 'click', function(){
+        api.sendEvent({
+            name: 'zoomIn'
+        });
+    });
+    $api.addEvt($api.dom("#zoomIn"), 'click', function(){
+        api.sendEvent({
+            name: 'zoomOut'
+        });
+    });
+</script>
