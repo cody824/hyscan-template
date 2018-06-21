@@ -153,3 +153,39 @@
 .s_left {
 	width: 100%;
 }
+.head-box.result .collect_info{
+	height:160px;
+}
+.head-box.result .collect_average{
+	white-space :nowrap;
+	/*left:30px;*/
+}
+.head-box.result .collect_average span{
+	margin:0;
+}
+.head-box.result .collect_average span.text{
+	width:75px;
+	white-space :nowrap;
+	text-overflow:ellipsis;
+	text-align:right;
+	/*overflow:*/
+	/*display:inline-block;*/
+}
+.head-box.result .collect_average span.special{
+	width:65px;
+	text-align:right;
+}
+.collect_average span.special{
+	font-family:Digital-7;
+	font-size:18px;
+}
+.collect_info{
+	width:85%;
+	margin:65px auto 0;
+}
+.collect_average span{
+	display:inline-block;
+	margin:0 3px;
+	height:25px;
+	line-height:25px;
+}

@@ -70,7 +70,7 @@
     "view.darkCurrent.title": "Dark measurement",
     "view.darkCurrent.msg": "Please collect the dark spectrum in an absolute dark background! ",
     "view.whiteboardData.title": "Reference measurement",
-    "view.whiteboardData.msg": "lease collect the reference spectrum! Make sure that the surrounding light bright enough!",
+    "view.whiteboardData.msg": "Please collect the reference spectrum! Make sure that the surrounding light bright enough!",
     "view.reviseComplete": "Revise completed",
     "view.beginAcquisition": "Begin to acquisiting",
     "toast.msg.acquisitingAndDisableSkip": "Acquisiting, please wait",
