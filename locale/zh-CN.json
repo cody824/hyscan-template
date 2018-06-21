@@ -201,5 +201,6 @@
     "alert.msg.bluetoothDisabled": "蓝牙未启用，请启用蓝牙设备",
     "ret.msg.saveRemoteFailed": "保存到服务器失败",
     "ret.msg.readTaskInfoFailed": "任务信息读取失败",
-    "view.dataDir" : "数据位置"
+    "view.dataDir" : "数据位置",
+    "view.targetType" : "目标类型"
 }

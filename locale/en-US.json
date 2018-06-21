@@ -206,5 +206,6 @@
     "alert.msg.bluetoothDisabled": "Bluetooth disabled",
     "ret.msg.saveRemoteFailed": "Save to remote Failed",
     "ret.msg.readTaskInfoFailed": "Read taskInfo failed",
-    "view.dataDir" : "Data dir"
+    "view.dataDir" : "Data dir",
+    "view.targetType" : "Target type"
 }
