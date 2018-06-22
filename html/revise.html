@@ -66,6 +66,7 @@
 	var blankOk = false;
 	var collectIng = false;
 	var stopNum = 0;
+	var collectNum = 0;
 
 	$api.addEvt($api.dom('.link_btn'), 'click', function() {
 		doCollect();
@@ -118,10 +119,17 @@
 				});
 			}
 		});
-
+        api.showProgress({
+            style: 'default',
+            animationType: 'fade',
+            title: i18n.t('progress.title.connecting', '连接光谱仪'),
+            text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
+            modal: false
+        });
 		sppUtil.init(function() {
 			sppUtil.connectDevice(appConfig.device.address, function(ret) {
 				console.log(JSON.stringify(ret));
+				api.hideProgress();
 				if (ret.err) {
 					api.alert({
 						title : i18n.t('error', '错误'),
@@ -188,7 +196,9 @@
 
 	function saveDatas(datas) {
 		if (collectIng) {
-			DPTool.addData(datas);
+			if (collectNum++ > 10) {
+                DPTool.addData(datas);
+			}
 			if (!DPTool.isDataOk()) {
 				return;
 			}
@@ -198,7 +208,8 @@
 
 
 	function doCollect() {
-		DPTool.initData();
+		DPTool.initData(10);
+        collectNum = 0;
 		hyCmd.collect(appConfig.device.address, function() {
 			collectIng = true;
 			api.showProgress({

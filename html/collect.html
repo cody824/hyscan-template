@@ -153,7 +153,7 @@
 							api.alert({
 								title: i18n.t('alert.title.acquisitionFailed', '采集失败'),
 								msg: i18n.t('alert.msg.acquisitionFailed', '采集数据无效，请返回重试'),
-		            buttons : [i18n.t('ok','确定')]
+		            			buttons : [i18n.t('ok','确定')]
 							}, function() {
 								gotoMain();
 							});
@@ -214,19 +214,24 @@
 	}
 
 	$api.addEvt($api.dom('.collect_stop'), 'click', function() {
-		hyCmd.collectOne(appConfig.device.address, function(ret, err){
-			if (!ret.status) {
-				api.alert({
-				  	title: i18n.t('error', '错误'),
-				    msg: err.msg,
-            buttons : [i18n.t('ok','确定')]
-				}, function(ret, err){
-					sppUtil.disconnectDevice(appConfig.device.address, function() {
-						gotoMain();
-					});
-				});
+	    var stop = setInterval(function () {
+			if (DPTool.isDataOk()){
+			    clearInterval(stop);
+                hyCmd.collectOne(appConfig.device.address, function(ret, err){
+                    if (!ret.status) {
+                        api.alert({
+                            title: i18n.t('error', '错误'),
+                            msg: err.msg,
+                            buttons : [i18n.t('ok','确定')]
+                        }, function(ret, err){
+                            sppUtil.disconnectDevice(appConfig.device.address, function() {
+                                gotoMain();
+                            });
+                        });
+                    }
+                });
 			}
-		});
+        }, 500);
 	});
 
 	function initChat(datas, labels) {
