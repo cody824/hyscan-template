@@ -16,9 +16,11 @@
             return ret;
         },
 
-        initData: function() {
+        initData: function(dataLength) {
             if (appConfig.globalConfig)
-                DPTool.dataLength = appConfig.globalConfig.collectNum || DPTool.dataLength;
+                DPTool.dataLength = dataLength || appConfig.globalConfig.collectNum || DPTool.dataLength;
+            else
+                DPTool.dataLength = dataLength || DPTool.dataLength;
             DPTool.datas = [];
         },
 
