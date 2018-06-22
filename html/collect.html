@@ -217,6 +217,11 @@
 	    var stop = setInterval(function () {
 			if (DPTool.isDataOk()){
 			    clearInterval(stop);
+                api.showProgress({
+                    title: i18n.t('progress.title.stopAcquisition', '采集停止中'),
+                    text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
+                    modal: true
+                });
                 hyCmd.collectOne(appConfig.device.address, function(ret, err){
                     if (!ret.status) {
                         api.alert({
