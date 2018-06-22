@@ -151,7 +151,6 @@
 							collectIng = false;
 							api.hideProgress();
 							var finallyData = DPTool.getFinallyData();
-							console.log(finallyData);
 							if (blankOk) {
 								appConfig.device.whiteboardData = finallyData;
 								if (appConfig.device.darkCurrent && appConfig.device.whiteboardData) {
@@ -170,7 +169,6 @@
 								blankOk = false;
                                 hyCmd.lightOff(appConfig.device.address);
 								sppUtil.disconnectDevice(appConfig.device.address, function(ret) {
-									console.log(JSON.stringify(ret));
 									gotoMain();
 								});
 							} else {
@@ -208,6 +206,9 @@
 
 
 	function doCollect() {
+	    if (collectIng){
+	        return;
+		}
 		DPTool.initData(10);
         collectNum = 0;
 		hyCmd.collect(appConfig.device.address, function() {
