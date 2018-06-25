@@ -58,12 +58,10 @@
     }
 
     window.gotoRevise = function(){
-        prepareCollect(function () {
-            api.openWin({
-                reload : true,
-                name: 'revise',
-                url: 'widget://template/html/revise.html'
-            });
+        api.openWin({
+            reload : true,
+            name: 'revise',
+            url: 'widget://template/html/revise.html'
         });
     }
 

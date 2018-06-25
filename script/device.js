@@ -364,7 +364,7 @@
 
 
 
-    window.prepareCollect = function(cb) {
+    window.prepareCollect = function(cbMap) {
         //检测是否绑定蓝牙设备如果绑定尝试连接设备
         api.showProgress({
             title : i18n.t('progress.title.scaning', '扫描设备中'),
@@ -385,7 +385,9 @@
                                 });
                             }
                         } catch (e) {}
-                        cb();
+                        if (cbMap && typeof cbMap[0] == "function" ){
+                            cbMap[0]();
+                        }
                     } else if (deviceRet.status == -1) {
                         setTimeout(gotoScanDevice, 1000);
                     } else if (deviceRet.status == -2) {
@@ -395,7 +397,7 @@
                             buttons: [i18n.t('confirm.btns.reConnect', '重新连接'), i18n.t('confirm.btns.newDevice', '新设备')]
                         }, function(ret, err) {
                             if (ret.buttonIndex == 1) {
-                                prepareCollect(cb);
+                                prepareCollect(cbMap);
                             } else {
                                 setTimeout(gotoScanDevice, 1000);
                             }
@@ -407,7 +409,7 @@
                             });
                         });
                     } else if (deviceRet.status == 2) {
-                        setTimeout(gotoRevise, 1000);
+                        setTimeout(cbMap[2], 1000);
                     }
                 });
             } else {
