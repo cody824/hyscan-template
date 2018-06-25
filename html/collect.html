@@ -163,7 +163,7 @@
 				var period = appConfig.device.period || 100;
 				console.log("Setup period：" + period);
 				hyCmd.periodSetup(appConfig.device.address, period);
-                hyCmd.lightOn(appConfig.device.address);s
+                hyCmd.lightOn(appConfig.device.address);
 				console.log("Send collect cmd");
 				hyCmd.collect(appConfig.device.address, function(ret) {
 					if (!ret.status) {
