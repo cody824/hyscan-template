@@ -29,7 +29,7 @@
       });
     }
 
-    window.gotoTask = function(tasks){
+    window.gotoTask = function(tasks, isCloud){
         api.openWin({
             bounces : true,
             allowEdit : true,
@@ -37,7 +37,8 @@
             name: 'tasks',
             url: 'widget://template/html/tasks.html',
             pageParam: {
-                tasks : tasks
+                tasks : tasks,
+                isCloud : isCloud
             }
         });
     }
@@ -79,14 +80,16 @@
 
   	}
 
-    window.gotoTaskInfo = function(task, back) {
+    window.gotoTaskInfo = function(task, back, isCloud, tasks) {
   		api.openWin({
             reload : true,
   			name: 'taskInfo',
   			url: 'widget://template/html/taskInfo.html',
   			pageParam: {
   				task: task,
-                back : back
+                back : back,
+                isCloud : isCloud,
+                tasks : tasks
   			}
   		});
   	}

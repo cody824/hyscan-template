@@ -170,12 +170,14 @@
         if (backWin == "main") {
             gotoMain();
         } else {
-            gotoTask();
+            gotoTask(api.pageParam.tasks, api.pageParam.isCloud);
         }
 	});
 
     $api.addEvt($api.dom('.result-remark'), 'click', function() {
-        remarkTask(task.name);
+        if (!api.pageParam.isCloud) {
+            remarkTask(task.name);
+        }
 	});
 
     apiready = function() {
@@ -192,10 +194,15 @@
                 if (backWin == "main") {
                     gotoMain();
                 } else {
-                    gotoTask();
+                    gotoTask(api.pageParam.tasks, api.pageParam.isCloud);
                 }
             }
         });
+
+        if (api.pageParam.isCloud) {
+			$api.css($api.dom('.btngroup_taskInfo'), "display:none;");
+		}
+
         api.addEventListener({
             name: 'viewdisappear'
         }, function(ret, err) {
@@ -214,11 +221,15 @@
         $api.text($api.dom('.result-time'), taskTime);
         $api.text($api.dom('.result-collectNum'), task.data.dnList.length);
         $api.text($api.dom('.result-period'), appConfig.device.period || 100);
-        $api.text($api.dom('.result-position'), task.position.streetName);
+        $api.text($api.dom('.result-position'), task.position.streetName || task.position.address);
 
         if (task.name && task.name.length > 0) {
             $api.text($api.dom('.result-remark'), task.name);
-        }
+        } else {
+            if (api.pageParam.isCloud) {
+                $api.text($api.dom('.result-remark'), "");
+			}
+		}
 
         if (task.imagePath) {
             $api.css($api.dom('.task_img img'), "display:block;")
@@ -233,6 +244,7 @@
         setTestResult(task.result);
 
         DPTool.setXAxis(labels);
+
         chartData = {
             dn: DPTool.getData(task.data.dn, 0),
             // radiance: DPTool.getRadiance(task.data, task.device.radianceA, task.device.radianceB),

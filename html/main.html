@@ -24,7 +24,9 @@
         <span class="user_info">
 				<img src="../img/setup.png" />
 			</span>
-        <a class="task" href="javascript:gotoTask();"></a>
+        <a class="task" href="javascript:void(0);"></a>
+        <a class="local" href="javascript:void(0);" style="display: none"></a>
+        <a class="cloud" href="javascript:void(0);" style="display: none"></a>
         HyScan
     </div>
 </body>
@@ -40,18 +42,39 @@
 <script type="text/javascript">
     var map;
     var currentTasks = null;//当前的任务列表
+    var supportCloudData =  $api.getStorage("supportCloudData");
+    if (!supportCloudData) {
+        $api.css($api.dom('.local'), "display:none");
+        $api.css($api.dom('.cloud'), "display:none");
+        $api.rmStorage("showCloud");
+    }
     $api.addEvt($api.dom('.user_info'), 'click', function() {
         api.openDrawerPane({
             type: 'left'
         });
     });
 
+    $api.addEvt($api.dom('.local'), 'click', function() {
+        $api.rmStorage("showCloud");
+        updateMap();
+    });
+    $api.addEvt($api.dom('.cloud'), 'click', function() {
+        $api.setStorage("showCloud", true);
+        updateMap();
+    });
+    $api.addEvt($api.dom('.task'), 'click', function() {
+        var showCloud = $api.getStorage("showCloud");
+        if (showCloud) {
+            gotoTask(currentTasks, true);
+        } else {
+            gotoTask();
+        }
+    });
+
     apiready = function() {
         init();//defined in app.js
         loadLocale();
-        stTask.findTask(function(tasks) {
-            currentTasks = tasks;
-        });
+
         map = api.require('bMap');
         api.addEventListener({
             name: 'viewdisappear'
@@ -135,7 +158,6 @@
                     vScrollBarEnabled: false,
                     hScrollBarEnabled: false
                 });
-                updateTaskView(map, $api.getStorage("lastZoomLevel") || 13, currentTasks, true);//更新标注
                 map.addEventListener({
                     name: 'viewChange'
                 }, function(ret) {
@@ -159,7 +181,7 @@
                         name: 'mapTaskList'
                     });
                 });
-
+                updateMap();
             });
         });
 
@@ -172,6 +194,39 @@
                     }
                 });
             });
+        }
+    }
+    
+    function updateMap() {
+        if (!appConfig.isLogin) {
+            $api.rmStorage("showCloud");
+            $api.css($api.dom('.cloud'), 'display:none;');
+            $api.css($api.dom('.local'), 'display:none;');
+            stTask.findTask(function(tasks) {
+                currentTasks = tasks;
+                updateTaskView(map, $api.getStorage("lastZoomLevel") || 13, currentTasks, true);//更新标注
+            });
+            return;
+        }
+        var showCloud = $api.getStorage("showCloud");
+        if (showCloud) {
+            stTask.findRemoteTask(function (tasks) {
+                currentTasks = tasks;
+                updateTaskView(map, $api.getStorage("lastZoomLevel") || 13, currentTasks, true);//更新标注
+            });
+            if (supportCloudData) {
+                $api.css($api.dom('.cloud'), 'display:none;');
+                $api.css($api.dom('.local'), 'display:block;');
+            }
+        } else {
+            stTask.findTask(function(tasks) {
+                currentTasks = tasks;
+                updateTaskView(map, $api.getStorage("lastZoomLevel") || 13, currentTasks, true);//更新标注
+            });
+            if (supportCloudData) {
+                $api.css($api.dom('.local'), 'display:none;');
+                $api.css($api.dom('.cloud'), 'display:block;');
+            }
         }
     }
 

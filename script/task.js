@@ -372,6 +372,77 @@
             }
         },
 
+        findRemoteTask: function(callback, start, limit) {
+            start = start || 0;
+            limit = limit || 500;
+            var url = globalConfig.serverUrl + "app/user/task/?appId=" + appId;
+            api.ajax({
+                url: url,
+                method: 'get',
+                headers: {
+                    hytoken: 'hyscan' + appConfig.token,
+                    "Content-Type": 'application/json',
+                    Accept: 'application/json'
+                }
+            }, function(ret, err) {
+                if (!ret) {
+                    var errorMsg = {};
+                    if (isJSON(err.msg)){
+                        errorMsg = JSON.parse(err.msg);
+                    } else {
+                        errorMsg.errorMsg = err.msg;
+                    }
+                    api.alert({
+                        title: '错误',
+                        msg: errorMsg.errorMsg,
+                    }, function (ret, err) {
+
+                    });
+                    return;
+                }
+                if (typeof callback == "function") {
+                    callback(ret);
+                }
+
+            });
+        },
+
+        getTaskFromRemote : function(taskId, containData, callback){
+            var url = globalConfig.serverUrl + "app/scanTask/appData/" + taskId + "?containData=" + containData;
+            api.ajax({
+                url: url,
+                method: 'get',
+                headers: {
+                    hytoken: 'hyscan' + appConfig.token,
+                    "Content-Type": 'application/json',
+                    Accept: 'application/json'
+                }
+            }, function(ret, err) {
+                if (!ret) {
+                    var errorMsg = {};
+                    if (isJSON(err.msg)){
+                        errorMsg = JSON.parse(err.msg);
+                    } else {
+                        errorMsg.errorMsg = err.msg;
+                    }
+                    api.alert({
+                        title: '错误',
+                        msg: errorMsg.errorMsg,
+                    }, function (ret, err) {
+
+                    });
+                    return;
+                }
+                ret.dc = [];
+                ret.dc[0] = ret.data.darkCurrent;
+                ret.dc[1] = ret.data.whiteboardData;
+                if (typeof callback == "function") {
+                    callback(ret);
+                }
+
+            });
+        },
+
         dateFormat: dateFormat
     }
 

@@ -26,13 +26,13 @@ input:focus {
 }
 input::-webkit-input-placeholder { /* WebKit browsers*/ 
 　　color:#999;
-　　}
+}
 input:-moz-placeholder {  /* Mozilla Firefox 4 to 18*/ 
 　　color:#999;
-　　}
+}
 input::-moz-placeholder {  /* Mozilla Firefox 19+*/ 
 　　color:#999;
-　　}
+}
 input:-ms-input-placeholder { /* Internet Explorer 10+*/ 
 　　color:#999;
 }
@@ -339,14 +339,7 @@ input:-ms-input-placeholder { /* Internet Explorer 10+*/
     color: #FFFFFF;  
 }  
   
-.testswitch-inner::before {  
-    content: attr(data-off);  
-    padding-right: 10px;  
-    background-color: #b03e11;   
-    color: #999999;  
-    text-align: right;  
-}  
-  
+
 .testswitch-switch {  
     position: absolute;   
     display: block;   
@@ -363,10 +356,7 @@ input:-ms-input-placeholder { /* Internet Explorer 10+*/
     margin-left: 0;  
 }  
   
-.testswitch-checkbox:checked + .testswitch-label .testswitch-switch {  
-    right: -3px;  
-	background:#f28227; 
-}  
+
 /* 校准设备 */
 @font-face {
 	font-family: 'DIGITAL-7MONO';

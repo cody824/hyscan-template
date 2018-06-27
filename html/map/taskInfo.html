@@ -48,13 +48,27 @@
 <script>
     var task;
     $api.addEvt($api.dom(".detail-pop-add"), 'click', function() {
-        stTask.getTask(task.id, true, function(ret) {
-            if (ret.status)
-                gotoTaskInfo(ret.task, "main");
-            api.closeFrame({
-                name: 'mapTaskInfo'
+        var showCloud = $api.getStorage("showCloud");
+        if (showCloud) {
+            stTask.getTaskFromRemote(task.id, true, function(ret) {
+                console.log(JSON.stringify(ret));
+                gotoTaskInfo(ret, "main", true);
+                api.closeFrame({
+                    name: 'mapTaskInfo'
+                });
             });
-        });
+        } else {
+            stTask.getTask(task.id, true, function(ret) {
+                if (ret.status)
+                    gotoTaskInfo(ret.task, "main");
+                api.closeFrame({
+                    name: 'mapTaskInfo'
+                });
+            });
+        }
+
+
+
     });
     apiready = function() {
         loadLocale();
@@ -76,6 +90,5 @@
         var taskTime = new Date(task.timestamp).Format('yyyy-MM-dd hh:mm:ss');
         $api.text($api.dom('.task_timestamp'), taskTime);
         $api.attr($api.dom('.my-img'), 'src', task.imagePath);
-        console.log(task.imagePath);
     }
 </script>

@@ -21,7 +21,7 @@ body {
 <body>
     <div class="item-pop-add">
     	<div class="item-left-add">
-        	<span class="text"><span data-i18n="view.hereHas">此处共</span><span class="tasks_num">10</span><span data-i18n="view.taskNum">条数据</span>
+            <span class="text"><span data-i18n="view.hereHas">此处共</span><span class="tasks_num">10</span><span data-i18n="view.taskNum">条数据</span></span>
         </div>
         <div class="item-right-add">
         	<span data-i18n="view.viewDetail">查看详情</span>
@@ -37,7 +37,8 @@ body {
 <script>
     var tasks;
     $api.addEvt($api.dom(".item-right-add"), 'click', function(){
-        gotoTask(tasks);
+        var showCloud = $api.getStorage("showCloud");
+        gotoTask(tasks, showCloud);
         api.closeFrame({
             name: 'mapTaskList'
         });

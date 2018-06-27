@@ -189,3 +189,23 @@
 	height:25px;
 	line-height:25px;
 }
+.cloud{
+	background:url(../img/cloud.png) no-repeat;
+	background-size:38px 30px;
+	position:absolute;
+	right:40px;
+	top:18px;
+	width:38px;
+	height:30px;
+	display:block;
+}
+.local{
+	background:url(../img/cloud_phone.png) no-repeat;
+	background-size:25px 35px;
+	position:absolute;
+	right:45px;
+	top:18px;
+	width:25px;
+	height:35px;
+	display:block;
+}
