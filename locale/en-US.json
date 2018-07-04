@@ -192,7 +192,7 @@
     "view.hereHas": "There are ",
     "view.taskNum" : " pieces of data here",
     "view.viewDetail": "Detail",
-    "input.error.userNameLength0-16": "Username, 用户名长度在0-16之间",
+    "input.error.userNameLength0-16": "Username, input 0 to 16 numbers",
     "progress.title.logging": "Logging",
     "error.userNameOrPasswordError": "Username or password error",
     "toast.msg.doubleClickToExist": "DoubleClick to exist",
