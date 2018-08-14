@@ -185,7 +185,7 @@
             });
         });
 
-        if(appConfig.device.address){
+        if(appConfig.device && appConfig.device.address){
             sppUtil.init(function(){
                 sppUtil.connectDevice(appConfig.device.address, function(ret){
                     if (ret.status) {
