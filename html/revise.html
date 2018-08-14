@@ -143,7 +143,14 @@
 					    duration: 2000,
 					    location: 'bottom'
 					});
-					hyCmd.lightOff(appConfig.device.address);
+                    var period = appConfig.device.period || 100;
+                    console.log("Setup period：" + period);
+                    hyCmd.periodSetup(appConfig.device.address, period);
+
+                    setTimeout(function () {
+                        hyCmd.lightOff(appConfig.device.address);
+                    }, 1000);
+
 					hyCmd.receive(appConfig.device.address, {
 						collect: saveDatas,
 						stopCollect: function() {
