@@ -752,7 +752,7 @@ input:-ms-input-placeholder { /* Internet Explorer 10+*/
 .states{
 	position:absolute;
 	right:0px;
-	top:15px;
+	top:275px;
 	font-size:14px;
 }
 .states span{

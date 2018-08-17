@@ -25,12 +25,13 @@
 			</div>
 		</div>
 	</div>
-	<div class="states">
-		   <span class="low" data-i18n="view.dataLow">过低</span>
-		   <span class="normal on" data-i18n="view.dataStable">稳定</span>
-		   <span class="high" data-i18n="view.dataHigh">饱和</span>
-   </div>
+
 	<div id="chart" class="chart-show" >
+	</div>
+	<div class="states">
+		<span class="low" data-i18n="view.dataLow">过低</span>
+		<span class="normal on" data-i18n="view.dataStable">稳定</span>
+		<span class="high" data-i18n="view.dataHigh">饱和</span>
 	</div>
 	<div class="collect_btns">
 		<span class="collect_stop on"></span>
@@ -245,7 +246,7 @@
 	});
 
 	function initChat(datas, labels) {
-        wdx(wdx)
+        wdx(datas)
 		DPTool.setXAxis(labels);
         var option = initChartOption({
 			title : i18n.t('term.dn', 'DN值'),
@@ -259,7 +260,7 @@
 	 * 稳定性
      */
 	function wdx(datas) {
-        var maxValue = appConfig.device.dnMaxValue;
+        var maxValue = parseInt(appConfig.device.dnMaxValue);
         var min = 1000000,
             max = 0;
         for (var i = 0; i < datas.length; i++) {
@@ -267,7 +268,6 @@
             if (data > max) max = data;
             if (data < min) min = data;
         }
-
         //稳定性检测
         if (max < maxValue * 0.5) {
             $api.addCls($api.dom('.states .low'), 'on');
