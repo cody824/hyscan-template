@@ -257,7 +257,7 @@
 				showConfig.formatter = i18n.t('term.wavelength', '波长') + "：{b}nm <br/> {a} : {c}";
 				datas = [];
 				for (var i = 0; i < chartData[property].length; i++) {
-					datas[i] = parseFloat(chartData[property][i]).toFixed(2);
+					datas[i] = parseFloat(chartData[property][i]).toFixed(4);
 				}
 				break;
 			case 'rmPacketLine':
