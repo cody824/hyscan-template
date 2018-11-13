@@ -74,7 +74,10 @@
 
     apiready = function() {
         init();//defined in app.js
-        customPostInit();
+
+        if (typeof customPostInit == "function") {
+            customPostInit();
+        }
         loadLocale();
 
         map = api.require('bMap');
