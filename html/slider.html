@@ -85,16 +85,24 @@
         });
     });
 
+    function clickLoginName(){
+        var status =   $api.attr($api.dom('#gotoLogin'), "data-status");
+        if (status == 'logout'){
+            api.openWin({
+                name: 'login',
+                url: './login.html'
+            });
+        } else {
+            gotoMe();
+        }
+    }
+
     $api.addEvt($api.dom('#gotoLogin'), 'click', function() {
-      var status =   $api.attr($api.dom('#gotoLogin'), "data-status");
-      if (status == 'logout'){
-          api.openWin({
-              name: 'login',
-              url: './login.html'
-          });
-      } else {
-          gotoMe();
-      }
+        clickLoginName();
+    });
+
+    $api.addEvt($api.dom('.h_img'), 'click', function() {
+        clickLoginName();
     });
 
     apiready = function() {
