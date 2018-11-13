@@ -39,6 +39,7 @@
 <script type="text/javascript" src="../script/device.js"></script>
 <script type="text/javascript" src="../script/spp.js"></script>
 <script type="text/javascript" src="../script/map.js"></script>
+<script type="text/javascript" src="../../script/custom.js"></script>
 <script type="text/javascript">
     var map;
     var currentTasks = null;//当前的任务列表
@@ -73,6 +74,7 @@
 
     apiready = function() {
         init();//defined in app.js
+        customPostInit();
         loadLocale();
 
         map = api.require('bMap');
@@ -173,7 +175,6 @@
                 map.addEventListener({
                     name: 'click'
                 }, function(ret) {
-                    console.log(ret);
                     api.closeFrame({
                         name: 'mapTaskInfo'
                     });
