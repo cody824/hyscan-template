@@ -44,9 +44,6 @@
 <script type="text/javascript" src="../script/locale.js"></script>
 <script type="text/javascript" src="../script/navi.js"></script>
 <script>
-    // console.log("do loadLocale");
-    // loadLocale();
-    // console.log("end loadLocale")
     $api.addEvt($api.dom('#setup'), 'click', function() {
         api.openWin({
             name: 'setup',
@@ -76,8 +73,11 @@
     });
 
     $api.addEvt($api.dom('#about'), 'click', function() {
+
+        var appName = $api.getStorage("appName") || "HyScan";
+
         api.alert({
-            title: 'HyScan',
+            title: appName,
             msg: 'V' + api.appVersion,
             buttons : [i18n.t('ok','确定')]
         }, function(ret, err) {
@@ -108,6 +108,9 @@
     apiready = function() {
           if (!isLoad) loadAppConfig();
           loadLocale();
+
+
+
           if (appConfig.isLogin){
               getUserDetails(appConfig.token, function(ud, err){
                   if (ud) {
