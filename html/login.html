@@ -80,12 +80,22 @@
 			$api.css($api.dom('#weibo'), 'display:none;')
 		}
 
+
 		if (third == 0) {
 			$api.css($api.dom('.login_methods'), 'display:none;')
 		}
 	}
 
 	function gotoRegister() {
+        var hiddenReg = $api.getStorage("hiddenReg");
+        if (hiddenReg) {
+            api.alert({
+                title: i18n.t('alert.title.hiddenReg','无法注册'),
+                msg: i18n.t('alert.msg.hiddenReg','暂不提供注册功能，请联系管理员生成账户，或者通过第三方账户登录'),
+                buttons : [i18n.t('ok','确定')]
+            });
+            return;
+        }
 		api.openWin({
 			reload: true,
 			name: 'register',
