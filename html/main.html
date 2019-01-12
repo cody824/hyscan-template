@@ -27,7 +27,7 @@
         <a class="task" href="javascript:void(0);"></a>
         <a class="local" href="javascript:void(0);" style="display: none"></a>
         <a class="cloud" href="javascript:void(0);" style="display: none"></a>
-        HyScan
+        <span class="appName">HyScan</span>
     </div>
 </body>
 
@@ -74,6 +74,10 @@
 
     apiready = function() {
         init();//defined in app.js
+
+        var appName = $api.getStorage("appName") || "HyScan";
+        $api.text($api.dom('.appName'), appName);
+
 
         if (typeof customPostInit == "function") {
             customPostInit();
