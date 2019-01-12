@@ -104,6 +104,15 @@
 	}
 
 	$api.addEvt($api.dom('#forgetPsdBtn'), 'click', function() {
+        var hiddenReg = $api.getStorage("hiddenReg");
+        if (hiddenReg) {
+            api.alert({
+                title: i18n.t('alert.title.hiddenFp','无法找回'),
+                msg: i18n.t('alert.msg.hiddenFp','暂不提供忘记密码功能，请联系管理员重置密码'),
+                buttons : [i18n.t('ok','确定')]
+            });
+            return;
+        }
 		api.openWin({
 			reload: true,
 			name: 'forgetPsd',
