@@ -3,7 +3,7 @@
     window.stDevice = {
         /**
          *  ret
-            {
+         {
               status://【0：设备OK， 1：需要更新设备信息 ，2：需要定标, -2:设备连接失败 -1：没有设备】
             }
 
@@ -313,7 +313,6 @@
             stopHandler();
             return;
         }
-        var range = appConfig.device.spectralRange;
         var labels = [],
             datas = [],
             hexData = [];
@@ -325,9 +324,32 @@
                 hexData[index++] = parseInt(numStr, 16);
             }
         }
-        for (var i = range[0]; i <= range[1]; i++) {
-            labels.push(1.9799 * i - 934.5831);
-            datas.push(hexData[i]);
+        if (appConfig.device.vnir && appConfig.device.vnirRange
+            && appConfig.device.vnirRange.length == 2 && appConfig.device.vnirRange[1] < data.length){
+            var vnirModel = spDeivceConfig.vnir[appConfig.device.vnir];
+            if (vnirModel){
+                for (var i = appConfig.device.vnirRange[0]; i <= appConfig.device.vnirRange[1]; i++) {
+                    labels.push(vnirModel.toW(i));
+                    datas.push(hexData[i]);
+                }
+            }
+        }
+        if (appConfig.device.swir && appConfig.device.swirRange
+            && appConfig.device.swirRange.length == 2 && appConfig.device.swirRange[1] < data.length){
+            var swirModel = spDeivceConfig.swir[appConfig.device.swir];
+            if (swirModel){
+                for (var i = appConfig.device.swirRange[0]; i <= appConfig.device.swirRange[1]; i++) {
+                    labels.push(swirModel.toW(i));
+                    datas.push(hexData[i]);
+                }
+            }
+        }
+        if (datas.length == 0 && appConfig.device.spectralRange){
+            var range = appConfig.device.spectralRange;
+            for (var i = range[0]; i <= range[1]; i++) {
+                labels.push(1.9799 * i - 934.5831);
+                datas.push(hexData[i]);
+            }
         }
         handler(datas, labels);
     }
@@ -358,6 +380,35 @@
         saveAppConfig();
         handler(data);
     }
+
+    window.spDeivceConfig = {
+
+        vnir: {
+            VNIR1: {
+                "name": "VNIR1",
+                "range": [674, 976],
+                "toW": function (index) {
+                    var a = 0.000004, b = 1.9726, c = -931.4841;
+                    var wavelength = (a * index * index + b * index + c).toFixed(2)
+                    return wavelength
+                }
+            }
+        },
+
+        swir: {
+            SWIR1: {
+                "name": "SWIR1",
+                "range": [2071, 2156],
+                "toW": function (index) {
+                    var a = -0.000511, b = 10.39, c = -18320;
+                    var wavelength = (a * index * index + b * index + c).toFixed(2)
+                    return wavelength
+                }
+            }
+        }
+
+    };
+
 
     window.hyCmd = __hyCmd;
 

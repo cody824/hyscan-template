@@ -24,7 +24,10 @@
     var defaultModelConfig = {
         "0105" : {
             radianceParams : [5, 2],
-            spectralRange : [648, 1012],
+            spectralRange : [674,976],
+            vnir : "VNIR1",
+            vnirRange : [674,976],
+            swir : "",
             dnMaxValue : 52500
         }
     }
@@ -51,7 +54,16 @@
                             spectralRange : model.spectralRange,
                             dnMaxValue : model.dnMaxValue
                         };
+                        if (model.vnir) {
+                            globalConfig.models[model.model].vnir = model.vnir;
+                            globalConfig.models[model.model].vnirRange = model.vnirRange;
+                        }
+                        if (model.swir) {
+                            globalConfig.models[model.model].swir = model.swir;
+                            globalConfig.models[model.model].swirRange = model.swirRange;
+                        }
                     }
+                    console.log(JSON.stringify(globalConfig.models));
                     $api.setStorage('supportModels', globalConfig.models);
                 } else {
                     console.log("Get remote model failed，use default")
@@ -92,8 +104,14 @@
                 var spectralRange = modelConfig.spectralRange;
                 if (spectralRange) {
                     __appConfig.device.spectralRange = spectralRange;
-                } else {
-                    console.log(__appConfig.device.model + " no  wavelength range found");
+                }
+                if (modelConfig.vnir) {
+                    __appConfig.device.vnir = modelConfig.vnir;
+                    __appConfig.device.vnirRange = modelConfig.vnirRange;
+                }
+                if (modelConfig.swir) {
+                    __appConfig.device.swir = modelConfig.swir;
+                    __appConfig.device.swirRange = modelConfig.swirRange;
                 }
                 __appConfig.device.dnMaxValue = modelConfig.dnMaxValue? modelConfig.dnMaxValue : 52500;
             } else {
