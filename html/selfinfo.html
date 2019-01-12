@@ -38,6 +38,9 @@
 				<span class="ico-name" data-i18n="view.email">邮箱</span>
 				<span class="ico-info" id="email"></span>
 			</li>
+			<li class="clearfix modify-password">
+				<a href="javascript:doModifyPassword();" data-i18n="view.modifyPassword">修改密码</a>
+			</li>
             <li class="clearfix last">
 				<a href="javascript:doLogout();" data-i18n="view.logout">退出登录</a>
 			</li>
@@ -216,6 +219,10 @@
 			}
 		});
 	}
+	
+	function doModifyPassword() {
+        gotoModifyPassword();
+    }
 
 	function isEmail(email) {
 		var emailReg = /\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/;

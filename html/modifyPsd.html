@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+	<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<script type="text/javascript" src="../script/lib/skin.js"></script>
+	<script>
+        skinUtil.loadSkin();
+	</script>
+	<title>忘记密码</title>
+</head>
+
+<body class="register_bg login_bg">
+	<div class="logo"></div>
+	<div class="login_con" style="margin-bottom:3%; margin-top:10%;">
+		<div class="login_info">
+			<span class="icon02"></span><input id="oldPassword" type="password" class="pwd" placeholder="请输入旧密码" data-i18n="placeholder.password"/>
+		</div>
+		<div class="login_info">
+			<span class="icon02"></span><input id="newPassword" type="password" class="pwd" placeholder="请输入新密码" data-i18n="placeholder.password"/>
+		</div>
+		<div class="login_info">
+			<span class="icon02"></span><input id="reNewPassword" type="password" class="pwd" placeholder="重新输入新密码" data-i18n="placeholder.password">
+		</div>
+	</div>
+	<div style="width: 100%; height: auto; position: relative; z-index: 99;">
+		<a class="login_btn register" href="javascript:resetPsd();" data-i18n="view.resetPsd">重设密码</a>
+		<a class="back_login"  href="javascript:closeThisWin();" data-i18n="view.cancel">取消</a>
+	</div>
+</body>
+
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript">
+	function closeThisWin() {
+        api.closeWin();
+	}
+
+	function resetPsd() {
+		var oldPassword = $api.val($api.dom('#oldPassword'));
+		var newPassword = $api.val($api.dom('#newPassword'));
+		var reNewPassword =  $api.val($api.dom('#reNewPassword'));
+        if (oldPassword.length == 0) {
+            api.alert({
+                title: i18n.t('alert.title.inputError','输入错误'),
+                msg: i18n.t('alert.msg.inputPassword','请输入密码')
+            });
+            return;
+        }
+		if (newPassword.length <= 0 || newPassword.length > 32) {
+			api.alert({
+				title: i18n.t('alert.title.inputError','输入错误'),
+				msg: i18n.t('alert.msg.passwordLengh1-32','密码长度1-32')
+			});
+			return;
+		}
+        if (newPassword != reNewPassword) {
+            api.alert({
+                title: i18n.t('alert.title.inputError','输入错误'),
+                msg: i18n.t('alert.msg.passwordNotMatch','两次输入不匹配')
+            });
+            return;
+        }
+
+		api.ajax({
+		    url: globalConfig.serverUrl + "security/user/password",
+		    method: 'put',
+			headers : {
+                hytoken: 'hyscan' + appConfig.token,
+				"Accept" : 'application/json'
+			},
+		    data: {
+		        values: {
+                    oldPassword : oldPassword,
+                    newPassword : newPassword
+		        }
+		    }
+		},function(ret, err){
+		    if (ret) {
+                api.toast({
+                    msg: i18n.t('toast.title.resetComplete','重置成功'),
+                    duration: 2000,
+                    location: 'bottom'
+                });
+		        setTimeout(closeThisWin, 500);
+		    } else {
+		        if (ret.statusCode == 200) {
+                    api.toast({
+                        msg: i18n.t('toast.title.resetComplete','重置成功'),
+                        duration: 2000,
+                        location: 'bottom'
+                    });
+                    setTimeout(closeThisWin, 500);
+				} else {
+                    var errMsg = JSON.parse(err.msg);
+                    $api.alert(errMsg.errorMsg)
+				}
+ø		    }
+		});
+	}
+
+	apiready = function() {
+		loadLocale();
+	}
+</script>

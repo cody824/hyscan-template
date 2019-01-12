@@ -907,8 +907,21 @@ input:-ms-input-placeholder { /* Internet Explorer 10+*/
 	text-align:center;
 	margin-right:0;
 }
-.eq-box.self li.last{
+.eq-box.self li.modify-password{
 	margin-top:40px;
+	border-bottom: 1px solid #d7d7d7;
+	border-top:none;
+}
+.eq-box.self li.modify-password a{
+	display: block;
+	height: 34px;
+	font-size: 16px;
+	line-height: 34px;
+	text-decoration:none;
+	text-align:center;
+}
+.eq-box.self li.last{
+	margin-top:10px;
 	border-bottom: 1px solid #d7d7d7;
 	border-top:none;
 }

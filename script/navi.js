@@ -77,22 +77,29 @@
                 labels: labels
             }
         });
-
   	}
 
     window.gotoTaskInfo = function(task, back, isCloud, tasks) {
-  		api.openWin({
+        api.openWin({
             reload : true,
-  			name: 'taskInfo',
-  			url: 'widget://template/html/taskInfo.html',
-  			pageParam: {
-  				task: task,
+            name: 'taskInfo',
+            url: 'widget://template/html/taskInfo.html',
+            pageParam: {
+                task: task,
                 back : back,
                 isCloud : isCloud,
                 tasks : tasks
-  			}
-  		});
-  	}
+            }
+        });
+    }
+
+    window.gotoModifyPassword = function() {
+        api.openWin({
+            reload : true,
+            name: 'modifyPsd',
+            url: 'widget://template/html/modifyPsd.html'
+        });
+    }
 
     window.gotoBack = function(){
         api.historyBack(function(ret, err) {
