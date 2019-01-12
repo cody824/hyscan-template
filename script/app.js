@@ -46,6 +46,7 @@
             },function(ret, err){
 
                 if (ret && ret.length > 0) {
+                    globalConfig.models = {};
                     for (var i = 0; i < ret.length; i++){
                         var model = ret[i];
                         console.log("Get remote model:" + model.model);
@@ -63,7 +64,6 @@
                             globalConfig.models[model.model].swirRange = model.swirRange;
                         }
                     }
-                    console.log(JSON.stringify(globalConfig.models));
                     $api.setStorage('supportModels', globalConfig.models);
                 } else {
                     console.log("Get remote model failed，use default")
@@ -104,14 +104,22 @@
                 var spectralRange = modelConfig.spectralRange;
                 if (spectralRange) {
                     __appConfig.device.spectralRange = spectralRange;
+                } else {
+                    delete __appConfig.device.spectralRange;
                 }
                 if (modelConfig.vnir) {
                     __appConfig.device.vnir = modelConfig.vnir;
                     __appConfig.device.vnirRange = modelConfig.vnirRange;
+                } else {
+                    delete __appConfig.device.vnir;
+                    delete __appConfig.device.vnirRange;
                 }
                 if (modelConfig.swir) {
                     __appConfig.device.swir = modelConfig.swir;
                     __appConfig.device.swirRange = modelConfig.swirRange;
+                }else {
+                    delete __appConfig.device.swir;
+                    delete __appConfig.device.swirRange;
                 }
                 __appConfig.device.dnMaxValue = modelConfig.dnMaxValue? modelConfig.dnMaxValue : 52500;
             } else {

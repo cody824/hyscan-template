@@ -203,6 +203,43 @@
                     callback(ret, err);
                 }
             })
+        },
+
+        setGainValue1: function(address, callback) {
+            var spp = api.require("spputil");
+            spp.send({
+                address: address,
+                isHex: true,
+                sendData: '55CC0A0014D007160000',
+            }, function(ret, err) {
+                if (typeof callback == "function") {
+                    callback(ret, err);
+                }
+            })
+        },
+
+        setVoltage: function(address, voltage, callback) {
+            var value = voltage * 10
+
+            if (value > 255) value = 255;
+            if (value < 1) value = 1;
+            var voltageData = value.toString(16);
+            var base = 332 //13B 55 + cc + 9 + 22;
+            var crc = (base + value).toString(16);
+            if (crc.length > 2) {
+                crc = crc.substring(crc.length - 2);
+            }
+            var sendData = "55CC090022" + voltageData + crc + "0000";
+            var spp = api.require("spputil");
+            spp.send({
+                address: address,
+                isHex: true,
+                sendData: sendData,
+            }, function(ret, err) {
+                if (typeof callback == "function") {
+                    callback(ret, err);
+                }
+            })
         }
 
     }

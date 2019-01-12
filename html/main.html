@@ -197,7 +197,10 @@
             sppUtil.init(function(){
                 sppUtil.connectDevice(appConfig.device.address, function(ret){
                     if (ret.status) {
+                        console.log("Init Device Config");
                         hyCmd.lightOff(appConfig.device.address);
+                        hyCmd.setGainValue1(appConfig.device.address)
+                        hyCmd.setVoltage(appConfig.device.address, 3)
                         sppUtil.disconnectDevice(appConfig.device.address);
                     }
                 });
