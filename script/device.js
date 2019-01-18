@@ -442,8 +442,37 @@
                     return wavelength
                 }
             }
+        },
+        
+        getLabel: function (device) {
+            var labels = [];
+            if (device.vnir && device.vnirRange){
+                var vnirConfig = spDeivceConfig.vnir[device.vnir];
+                if (vnirConfig){
+                    for (var i = device.vnirRange[0]; i < device.vnirRange[1]; i++){
+                        var label = vnirConfig.toW(i);
+                        labels.push(label)
+                    }
+                }
+            }
+            if (device.swir && device.swirRange){
+                var swirConfig = spDeivceConfig.swir[device.swir];
+                if (swirConfig){
+                    for (var i = device.swirRange[0]; i < device.swirRange[1]; i++){
+                        var label = swirConfig.toW(i);
+                        labels.push(label)
+                    }
+                }
+            }
+            if (labels.length == 0){
+                if (device.spectralRange){
+                    for (var i = device.spectralRange[0]; i < device.spectralRange[1]; i++) {
+                        labels.push(1.9799 * i - 934.5831);
+                    }
+                }
+            }
+            return labels;
         }
-
     };
 
 

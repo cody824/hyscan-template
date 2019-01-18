@@ -81,6 +81,7 @@
 <script type="text/javascript" src="../script/task.js"></script>
 <script type="text/javascript" src="../script/dp.js"></script>
 <script type="text/javascript" src="../script/chart.js"></script>
+<script type="text/javascript" src="../script/device.js"></script>
 <script type="text/javascript" src="../script/lib/echarts.common.min.js"></script>
 <script type="text/javascript" src="../script/lib/swipe.min.js"></script>
 <script>
@@ -241,15 +242,9 @@
             $api.attr($api.dom('.task_img img'), "src", task.imagePath);
         }
 
-        var labels = [];
-        var range = task.device.spectralRange;
-        for (var i = range[0]; i < range[1]; i++) {
-            labels.push(1.9799 * i - 934.5831);
-        }
+        var labels = spDeivceConfig.getLabel(task.device);
         setTestResult(task.result);
-
         DPTool.setXAxis(labels);
-
         chartData = {
             dn: DPTool.getData(task.data.dn, 0),
             // radiance: DPTool.getRadiance(task.data, task.device.radianceA, task.device.radianceB),
