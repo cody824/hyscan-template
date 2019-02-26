@@ -199,7 +199,10 @@
                     if (ret.status) {
                         console.log("Init Device Config");
                         hyCmd.lightOff(appConfig.device.address);
-                        hyCmd.setGainValue1(appConfig.device.address)
+                        var setGain = $api.getStorage('setGain');
+                        if (setGain){
+                            hyCmd.setGainValue1(appConfig.device.address)
+                        }
                         hyCmd.setVoltage(appConfig.device.address, 3)
                         sppUtil.disconnectDevice(appConfig.device.address);
                     }
