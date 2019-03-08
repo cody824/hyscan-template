@@ -145,8 +145,8 @@
 					});
                     var periodVL = appConfig.device.periodVL || appConfig.device.period || 100;
                     var periodSW = appConfig.device.periodSW || 100;
-                    console.log("Setup periodVL：" + periodVL);
-                    console.log("Setup periodSW：" + periodSW);
+                    console.log("Setup periodVL:" + periodVL);
+                    console.log("Setup periodSW:" + periodSW);
                     hyCmd.periodSetup(appConfig.device.address, periodVL);
                     hyCmd.period2Setup(appConfig.device.address, periodVL, periodSW);
 

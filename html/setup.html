@@ -98,7 +98,8 @@
 
 	var cn = appConfig.globalConfig.collectNum || 1;
 	var serverIp = appConfig.globalConfig.serverIp || "";
-	var devicePeriod = 100;
+	var devicePeriodVL = 100;
+    var devicePeriodSW = 100;
 	var sysLang = navigator.language;
 	if (!globalConfig.lang[sysLang]) {
 		sysLang = globalConfig.defaultLang;
@@ -111,7 +112,8 @@
 	$api.text($api.dom('#collectNum'), cn);
 	$api.text($api.dom('#serverIp'), serverIp);
 	if (appConfig.device) {
-		devicePeriod = appConfig.device.period ? appConfig.device.period : devicePeriod;
+        devicePeriodVL = appConfig.device.periodVL ? appConfig.device.periodVL : devicePeriodVL;
+        devicePeriodSW = appConfig.device.periodSW ? appConfig.device.periodSW : devicePeriodSW;
 		$api.text($api.dom('#bindStatus'), i18n.t("view.bound","已绑定"));
 		$api.text($api.dom('#unbunding'), i18n.t('view.unbunding',"解绑"));
 	} else {
@@ -121,7 +123,8 @@
 	if (isDev) {
 		$api.css($api.dom("#serverIpSetupLi"), 'display:block;');
 	}
-	$api.text($api.dom('#period'), devicePeriod);
+	$api.text($api.dom('#periodVL'), devicePeriodVL);
+    $api.text($api.dom('#periodSW'), devicePeriodSW);
 
 	apiready = function() {
 		dialogBox = api.require('dialogBox');
@@ -374,7 +377,7 @@
 		});
 	});
 	$api.addEvt($api.dom('#periodVLLi'), 'click', function() {
-		var numVL = $api.text($api.dom('#periodVL'));
+		var num = $api.text($api.dom('#periodVL'));
 		setupPeriod(num, "VL");
 	});
     $api.addEvt($api.dom('#periodSWLi'), 'click', function() {
@@ -534,6 +537,7 @@
                     period = period > maxPeriod? maxPeriod : period;
 				}
 				if (appConfig.device) {
+                    console.log(type, period);
 				    if (type == "VL") {
                         appConfig.device.period = period;
                         appConfig.device.periodVL = period;
@@ -541,8 +545,9 @@
                         appConfig.device.periodSW = period;
 					}
 					saveAppConfig();
+                    console.log(JSON.stringify(appConfig.device));
 				}
-				$api.text($api.dom('#period' + type.), ret.text);
+				$api.text($api.dom('#period' + type), ret.text);
 			}
 		});
 	}
