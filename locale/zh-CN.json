@@ -83,6 +83,8 @@
     "view.turnOff": "关闭",
     "view.turnOn": "开启",
     "view.integrationPeriod": "积分时间",
+    "view.integrationPeriodVL": "可见光积分时间",
+    "view.integrationPeriodSW": "短波积分时间",
     "view.timesOfAcquiring": "平均采集次数",
     "times": "次",
     "view.drSetup": "光谱定标设置",

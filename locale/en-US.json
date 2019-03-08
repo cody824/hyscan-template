@@ -85,6 +85,8 @@
     "view.turnOff": "Turn off",
     "view.turnOn": "Turn on",
     "view.integrationPeriod": "Integration period",
+    "view.integrationPeriodVL": "Integration period(VL)",
+    "view.integrationPeriodSW": "Integration period(SW)",
     "view.timesOfAcquiring": "Times of acquiring",
     "view.drSetup": "DR setup",
     "view.collectMode": "Collect mode",

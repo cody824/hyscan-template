@@ -33,10 +33,15 @@
 			<span class="btn special lightOff" data-i18n="view.turnOff">关闭</span>
 			<span class="btn lightOn" data-i18n="view.turnOn">开启</span>
 		</li>
-		<li class="clearfix jf" id="periodLi">
+		<li class="clearfix jf" id="periodVLLi">
 			<span class="small-ico ico2"></span>
-			<span class="ico-name" data-i18n="view.integrationPeriod">积分时间</span>
-			<span class="ico-info ico-info2"><span id="period">255</span>ms</span>
+			<span class="ico-name" data-i18n="view.integrationPeriodVL">可见光积分时间</span>
+			<span class="ico-info ico-info2"><span id="periodVL">255</span>ms</span>
+		</li>
+		<li class="clearfix jf" id="periodSWLi">
+			<span class="small-ico ico2"></span>
+			<span class="ico-name" data-i18n="view.integrationPeriodSW">短波积分时间</span>
+			<span class="ico-info ico-info2"><span id="periodSW">255</span>ms</span>
 		</li>
 		<li class="clearfix cj" id="collectNumLi">
 			<span class="small-ico ico3"></span>
@@ -368,10 +373,14 @@
 			}
 		});
 	});
-	$api.addEvt($api.dom('#periodLi'), 'click', function() {
-		var num = $api.text($api.dom('#period'));
-		setupPeriod(num);
+	$api.addEvt($api.dom('#periodVLLi'), 'click', function() {
+		var numVL = $api.text($api.dom('#periodVL'));
+		setupPeriod(num, "VL");
 	});
+    $api.addEvt($api.dom('#periodSWLi'), 'click', function() {
+        var num = $api.text($api.dom('#periodSW'));
+        setupPeriod(num, "SW");
+    });
 	$api.addEvt($api.dom('#collectNumLi'), 'click', function() {
 		var num = $api.text($api.dom('#collectNum'));
 		setupCollectNum(num);
@@ -491,7 +500,7 @@
 		});
 	}
 
-	function setupPeriod(current) {
+	function setupPeriod(current, type) {
 		dialogBox.input({
 			keyboardType: 'number',
 			texts: {
@@ -525,10 +534,15 @@
                     period = period > maxPeriod? maxPeriod : period;
 				}
 				if (appConfig.device) {
-					appConfig.device.period = period;
+				    if (type == "VL") {
+                        appConfig.device.period = period;
+                        appConfig.device.periodVL = period;
+					} else if("SW" == type){
+                        appConfig.device.periodSW = period;
+					}
 					saveAppConfig();
 				}
-				$api.text($api.dom('#period'), ret.text);
+				$api.text($api.dom('#period' + type.), ret.text);
 			}
 		});
 	}

@@ -153,6 +153,31 @@
             })
         },
 
+        period2Setup: function(address, data1, data2, callback) {
+            if (data1 > 255) data1 = 255;
+            if (data1 < 1) data1 = 1;
+            if (data2 > 255) data2 = 255;
+            if (data2 < 1) data2 = 1;
+            var period1 = data1.toString(16);
+            var period2 = data2.toString(16);
+            var base = 315 //13B 55 + cc + 9 + 11;
+            var crc = (base + data1 + data2).toString(16);
+            if (crc.length > 2) {
+                crc = crc.substring(crc.length - 2);
+            }
+            var sendData = "55CC090011" + period1 + period2 + crc + "0000";
+            var spp = api.require("spputil");
+            spp.send({
+                address: address,
+                isHex: true,
+                sendData: sendData.toUpperCase(),
+            }, function(ret, err) {
+                if (typeof callback == "function") {
+                    callback(ret, err);
+                }
+            })
+        },
+
         lightOn: function(address, callback) {
             var spp = api.require("spputil");
             spp.send({
