@@ -524,28 +524,41 @@
 				// doSaveLocal(ret.text);
 			} else if (ret.eventType == 'right') {
 				var period = parseInt(ret.text);
-				if (period > 255 || period < 1) {
-					api.alert({
-						title: i18n.t('alert.title.inputError','输入错误'),
-						msg: i18n.t('alert.msg.inputRangeError1-255','只能输入1-255之间的数'),
-            buttons : [i18n.t('ok','确定')]
-					});
-					return;
-				}
+
+				if (type == "VL"){
+                    if (period > 255 || period < 1) {
+                        api.alert({
+                            title: i18n.t('alert.title.inputError','输入错误'),
+                            msg: i18n.t('alert.msg.inputRangeError1-255','只能输入1-255之间的数'),
+                            buttons : [i18n.t('ok','确定')]
+                        });
+                        return;
+                    }
+				} else if (type == "SW"){
+                    if (period > 65535 || period < 1) {
+                        api.alert({
+                            title: i18n.t('alert.title.inputError','输入错误'),
+                            msg: i18n.t('alert.msg.inputRangeError1-65535','只能输入1-65535之间的数'),
+                            buttons : [i18n.t('ok','确定')]
+                        });
+                        return;
+                    }
+                }
+
                 var maxPeriod = $api.getStorage('maxPeriod');
 				if (maxPeriod) {
                     period = period > maxPeriod? maxPeriod : period;
 				}
 				if (appConfig.device) {
-                    console.log(type, period);
 				    if (type == "VL") {
                         appConfig.device.period = period;
                         appConfig.device.periodVL = period;
 					} else if("SW" == type){
                         appConfig.device.periodSW = period;
 					}
+					delete appConfig.device.darkCurrent;
+					delete appConfig.device.whiteboardData;
 					saveAppConfig();
-                    console.log(JSON.stringify(appConfig.device));
 				}
 				$api.text($api.dom('#period' + type), ret.text);
 			}

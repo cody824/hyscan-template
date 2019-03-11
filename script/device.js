@@ -156,16 +156,17 @@
         period2Setup: function(address, data1, data2, callback) {
             if (data1 > 255) data1 = 255;
             if (data1 < 1) data1 = 1;
-            if (data2 > 255) data2 = 255;
+            if (data2 > 65535) data2 = 65535;
             if (data2 < 1) data2 = 1;
-            var period1 = data1.toString(16);
-            var period2 = data2.toString(16);
-            var base = 315 //13B 55 + cc + 9 + 11;
-            var crc = (base + data1 + data2).toString(16);
-            if (crc.length > 2) {
-                crc = crc.substring(crc.length - 2);
+            var period1 = get16LH(data1)
+            var period2 = get16LH(data2)
+            if (period2.length == 2){
+                period2 += "00";
             }
-            var sendData = "55CC090011" + period1 + period2 + crc + "0000";
+            var sendData = "55CC0B0011" + period1 + period2;
+            var crc = getCrc(sendData);
+            sendData = sendData + crc + "0000";
+            console.log("send:" + sendData);
             var spp = api.require("spputil");
             spp.send({
                 address: address,
@@ -563,6 +564,39 @@
                 });
             }
         });
+    }
+
+    function get16LH(num) {
+        var str = num.toString(16);
+        var arr = [];
+        var sarr = [];
+        for (var i = str.length-1, n = 0; i >= 0; i--, n++){
+            if (n % 2 == 0){
+                sarr[0] = "0"
+                sarr[1] = str.charAt(i);
+            } else {
+                sarr[0] = str.charAt(i);
+            }
+            if ((n == str.length - 1) || (n & 2 != 0)){
+                arr.push(sarr[0] + sarr[1]);
+            }
+        }
+        return arr.join("").toUpperCase();
+    }
+
+    function getCrc(str) {
+        var crc = 0;
+        for (var n = 0; n < str.length; n = n + 2){
+           if ((n + 1) < str.length){
+               var num = parseInt(str.charAt(n) + str.charAt(n+1), 16);
+               crc += num;
+           }
+        }
+        var crcStr = crc.toString(16);
+        if (crcStr.length > 2) {
+            crcStr = crcStr.substring(crcStr.length - 2);
+        }
+        return crcStr;
     }
 
 })(window);
