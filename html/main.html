@@ -193,6 +193,13 @@
             });
         });
 
+        api.addEventListener({
+            name: 'loadAppConfig'
+        }, function(ret, err) {
+            console.log('loadAppConfig');
+            loadAppConfig();
+        });
+
         if(appConfig.device && appConfig.device.address){
             sppUtil.init(function(){
                 sppUtil.connectDevice(appConfig.device.address, function(ret){

@@ -107,7 +107,7 @@
                                     $api.css($api.dom('.wifi_off'), 'display:none;');
                                     $api.text($api.dom('.s_txt'), i18n.t('view.deviceConnected', '设备已连接'));
                                     api.hideProgress();
-                                    gotoMain();
+                                     gotoMain();
                                 });
                             });
                             setTimeout(function () {
@@ -120,7 +120,7 @@
                                     });
                                     appConfig.device = null;
                                 }
-                            }, 3000);
+                            }, 9000);
                         } else {
                             api.hideProgress();
                             api.alert({

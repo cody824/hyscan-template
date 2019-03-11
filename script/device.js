@@ -528,6 +528,13 @@
                                 });
                             }
                         } catch (e) {}
+                        console.log("Init Device Config before collect");
+                        hyCmd.lightOff(appConfig.device.address);
+                        var setGain = $api.getStorage('setGain');
+                        if (setGain){
+                            hyCmd.setGainValue1(appConfig.device.address)
+                        }
+                        hyCmd.setVoltage(appConfig.device.address, 3)
                         if (cbMap && typeof cbMap[0] == "function" ){
                             cbMap[0]();
                         }
