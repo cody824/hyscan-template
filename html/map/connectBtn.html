@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <title>APP</title>
+</head>
+<style type="text/css">
+body {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+img {
+    border:none;
+    display: table;
+}
+</style>
+<script type="text/javascript" src="../../script/lib/skin.js"></script>
+<script>
+    skinUtil.loadSkin(["additional"],null, null, "../../..");
+</script>
+<body>
+    <div id="gotoConnect"></div>
+</body>
+</html>
+<script type="text/javascript" src="../../../script/api.js"></script>
+<script type="text/javascript" src="../../script/sameAsJq.js"></script>
+<script type="text/javascript" src="../../script/app.js"></script>
+<script type="text/javascript" src="../../script/locale.js"></script>
+<script type="text/javascript" src="../../script/navi.js"></script>
+<script type="text/javascript" src="../../script/spp.js"></script>
+<script type="text/javascript" src="../../script/device.js"></script>
+<script>
+    loadLocale();
+    $api.addEvt($api.dom("#gotoConnect"), 'click', function(){
+        loadAppConfig();
+        if (appConfig.device && appConfig.device.address) {
+            connectDevice();
+        } else {
+            gotoScanDevice();
+        }
+    });
+    
+    function connectDevice(force) {
+        api.showProgress({
+            title : i18n.t('progress.title.connecting', '努力连接中'),
+            text : i18n.t('progress.text.pleaseWait', '请耐心等待'),
+        });
+        if (force){
+            sppUtil.disconnectDevice(force);
+            setTimeout(doConnect, 500);
+        } else {
+            doConnect();
+        }
+    }
+    
+    function doConnect() {
+        sppUtil.connectDevice(appConfig.device.address, function (ret) {
+            var maxNum = 20;
+            var wc = setInterval(function () {
+                sppUtil.isConnected(appConfig.device.address, function (ret) {
+                    if (maxNum <= 0){
+                        api.hideProgress();
+                        clearInterval(wc);
+                        api.confirm({
+                            title : i18n.t('confirm.title.notConnected', '未能连接光谱仪'),
+                            msg : i18n.t('confirm.msg.notConnected', '连接光谱仪错误,检查设备后重新连接或者连接新设备'),
+                            buttons: [i18n.t('confirm.btns.newDevice', '新设备'), i18n.t('confirm.btns.reConnect', '重新连接'), i18n.t('cancel', '取消')]
+                        }, function(ret, err) {
+                            if (ret.buttonIndex == 1) {
+                                gotoScanDevice();
+                            } else if(ret.buttonIndex == 2){
+                                connectDevice();
+                            }
+                        });
+                        api.sendEvent({
+                            name: 'connectFailed'
+                        });
+                    } else if (ret.status){
+                        api.hideProgress();
+                        clearInterval(wc);
+                        api.sendEvent({
+                            name: 'connectOk'
+                        });
+                    }
+                    maxNum--;
+                })
+            }, 500);
+        });
+    }
+    
+</script>

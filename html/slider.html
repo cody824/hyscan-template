@@ -46,6 +46,7 @@
 <script>
     $api.addEvt($api.dom('#setup'), 'click', function() {
         api.openWin({
+            reload: true,
             name: 'setup',
             url: './setup.html'
         });
@@ -53,6 +54,7 @@
     });
 
     $api.addEvt($api.dom('#deviceInfo'), 'click', function() {
+        loadAppConfig();
         if (appConfig.device) {
             api.openWin({
                 name: 'equipment',
@@ -68,7 +70,6 @@
                     gotoScanDevice();
                 }
             });
-
         }
     });
 
@@ -106,43 +107,58 @@
     });
 
     apiready = function() {
-          if (!isLoad) loadAppConfig();
+          loadAppConfig();
           loadLocale();
-
-
-
           if (appConfig.isLogin){
-              getUserDetails(appConfig.token, function(ud, err){
-                  if (ud) {
-                      appConfig.isLogin = true;
-                      appConfig.loginName = ud.fullName;
-                      appConfig.user = ud;
-                      saveAppConfig();
-                      var headImg = null;
-                      if (ud.avatar) {
-                          headImg = ud.avatar;
-                      } else if (ud.avatarHd) {
-                           headImg = ud.avatarHd;
-                      }
-                      if (headImg)
-                          $api.attr($api.dom('.h_img'), 'src', headImg);
-                      $api.text($api.dom('#gotoLogin'), appConfig.loginName);
-                      $api.attr($api.dom('#gotoLogin'), "data-status", "login");
-                  }  else {
-                      if (err.statusCode == 401) {
-                          logout(function(){
-                              api.toast({
-                                  msg: i18n.t('toast.msg.expires','登录过期，需要重新登录'),
-                                  duration: 2000,
-                                  location: 'top'
-                              });
-                          })
-                      }
-                  }
-              })
+              modifyUserInfo();
           } else {
+              $api.attr($api.dom('.h_img'), 'src', '../img/default_avatar_male_180.gif');
               $api.attr($api.dom('#gotoLogin'), "data-status", "logout");
               $api.text($api.dom('#gotoLogin'), i18n.t('view.clickToLogin','点击登录'));
           }
+
+        api.addEventListener({
+            name: 'userLogin'
+        }, function (ret, err) {
+            loadAppConfig();
+            if (appConfig.isLogin){
+                modifyUserInfo();
+            } else {
+                $api.attr($api.dom('.h_img'), 'src', '../img/default_avatar_male_180.gif');
+                $api.attr($api.dom('#gotoLogin'), "data-status", "logout");
+                $api.text($api.dom('#gotoLogin'), i18n.t('view.clickToLogin','点击登录'));
+            }
+        });
+    }
+
+    function modifyUserInfo() {
+        getUserDetails(appConfig.token, function(ud, err){
+            if (ud) {
+                appConfig.isLogin = true;
+                appConfig.loginName = ud.fullName;
+                appConfig.user = ud;
+                saveAppConfig();
+                var headImg = null;
+                if (ud.avatar) {
+                    headImg = ud.avatar;
+                } else if (ud.avatarHd) {
+                    headImg = ud.avatarHd;
+                }
+                if (headImg)
+                    $api.attr($api.dom('.h_img'), 'src', headImg);
+                $api.text($api.dom('#gotoLogin'), appConfig.loginName);
+                $api.attr($api.dom('#gotoLogin'), "data-status", "login");
+            }  else {
+                if (err.statusCode == 401) {
+                    logout(function(){
+                        api.toast({
+                            msg: i18n.t('toast.msg.expires','登录过期，需要重新登录'),
+                            duration: 2000,
+                            location: 'top'
+                        });
+                    })
+                }
+            }
+        })
     }
 </script>

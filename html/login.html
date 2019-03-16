@@ -132,7 +132,10 @@
 					if (ret.status) {
 						tpaLogin('weibo', ret.userInfo, function(ret, err) {
 							if (ret.status) {
-								gotoMain();
+                                api.sendEvent({
+                                    name: 'userLogin'
+                                });
+                                gotoMain();
 							} else {
 								var msg = i18n.t('error.unknownError','未知错误');
 								if (err && err.msg)
@@ -163,7 +166,10 @@
 						userInfo.idstr = "" + openId;
 						tpaLogin('qq', userInfo, function(ret, err) {
 							if (ret.status) {
-								gotoMain();
+                                api.sendEvent({
+                                    name: 'userLogin'
+                                });
+                                gotoMain();
 							} else {
 								var msg = i18n.t('error.unknownError','未知错误');
 								if (err && err.msg)
@@ -207,7 +213,10 @@
 							if (ret.status) {
 								tpaLogin('wechat', ret, function(ret, err) {
 									if (ret.status) {
-										gotoMain();
+                                        api.sendEvent({
+                                            name: 'userLogin'
+                                        });
+                                        gotoMain();
 									} else {
 										var msg = i18n.t('error.unknownError','未知错误');
 										if (err && err.msg)
@@ -273,7 +282,10 @@
 		var password = $api.val($api.dom('input.pwd'));
 		login(userName, password, function(ret, err) {
 			if (ret.status) {
-				gotoMain();
+                api.sendEvent({
+                    name: 'userLogin'
+                });
+                gotoMain();
 			} else {
 				var msg = i18n.t('error.unknownError','未知错误');
 				if (err && err.msg)

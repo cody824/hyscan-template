@@ -77,7 +77,11 @@
         $api.css($api.dom('.bluetooth'), 'top:0%;');
         $api.css($api.dom('#scanning'), 'display:block;');
         $api.css($api.dom('#left'), 'display:none;');
+        $api.html($api.dom('.bluetooth .b_list'), '');
         sppUtil.scanDevice(60 * 3, function (device) {
+            if (!device.name){
+                return;
+            }
             var deviceLi = $api.dom('.bluetooth .b_list li[address="' + device.address + '"]');
             if (deviceLi == null) {
                 $api.append($api.dom('.bluetooth .b_list'), "<li address='" + device.address + "'>" + device.name + "</li>");
@@ -92,35 +96,52 @@
                     });
                     sppUtil.connectDevice(address, function (ret, err) {
                         console.log(JSON.stringify(ret));
+                        appConfig.device = JSON.parse(ret.device);
                         if (ret.status) {
-                            appConfig.device = JSON.parse(ret.device);
-                            api.showProgress({
-                                style: 'default',
-                                animationType: 'fade',
-                                title: i18n.t('progress.title.getDeviceInfo', '获取设备信息') + "...",
-                                text: i18n.t('progress.text.pleaseWait', '请稍候') + "...",
-                                modal: false
-                            });
-                            stDevice.readDeviceInfo(address, function () {
-                                sppUtil.disconnectDevice(address, function () {
-                                    $api.css($api.dom('.wifi_on'), 'display:block;');
-                                    $api.css($api.dom('.wifi_off'), 'display:none;');
-                                    $api.text($api.dom('.s_txt'), i18n.t('view.deviceConnected', '设备已连接'));
-                                    api.hideProgress();
-                                     gotoMain();
-                                });
-                            });
-                            setTimeout(function () {
-                                if (!appConfig.device.model) {
-                                    api.hideProgress();
-                                    api.alert({
-                                        title: i18n.t('alert.title.getDeviceInfoFailed', '获取设备信息失败'),
-                                        msg: i18n.t('alert.msg.getDeviceInfoFailed', '不能连接除HYSCAN光谱仪外的其他设备'),
-                                        buttons: [i18n.t('ok', '确定')]
-                                    });
-                                    appConfig.device = null;
-                                }
-                            }, 9000);
+                            var maxNum = 20;
+                            var wc = setInterval(function () {
+                                sppUtil.isConnected(address, function (ret) {
+                                    if (maxNum <= 0){
+                                        clearInterval(wc);
+                                        api.alert({
+                                            title: i18n("error", "错误"),
+                                            msg: i18n('toast.msg.connectFailed', "连接失败")
+                                        });
+                                    }
+                                    if (ret.status){
+                                        clearInterval(wc);
+                                        api.showProgress({
+                                            style: 'default',
+                                            animationType: 'fade',
+                                            title: i18n.t('progress.title.getDeviceInfo', '获取设备信息') + "...",
+                                            text: i18n.t('progress.text.pleaseWait', '请稍候') + "...",
+                                            modal: false
+                                        });
+                                        stDevice.readDeviceInfo(address, function () {
+                                            $api.css($api.dom('.wifi_on'), 'display:block;');
+                                            $api.css($api.dom('.wifi_off'), 'display:none;');
+                                            $api.text($api.dom('.s_txt'), i18n.t('view.deviceConnected', '设备已连接'));
+                                            api.hideProgress();
+                                            saveAppConfig();
+                                            gotoMain();
+                                        });
+                                        setTimeout(function () {
+                                            if (!appConfig.device.model) {
+                                                api.hideProgress();
+                                                api.alert({
+                                                    title: i18n.t('alert.title.getDeviceInfoFailed', '获取设备信息失败'),
+                                                    msg: i18n.t('alert.msg.getDeviceInfoFailed', '不能连接除HYSCAN光谱仪外的其他设备'),
+                                                    buttons: [i18n.t('ok', '确定')]
+                                                });
+                                                sppUtil.disconnectDevice(address);
+                                                appConfig.device = null;
+                                            }
+                                        }, 9000);
+                                    } 
+                                    maxNum--;
+                                })
+                            }, 500);
+
                         } else {
                             api.hideProgress();
                             api.alert({

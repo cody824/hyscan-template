@@ -1,29 +1,13 @@
 (function(window) {
 
     window.gotoMain = function() {
-        api.openDrawerLayout({
-            name: 'main',
-            url: 'widget://template/html/main.html',
-            animation: {
-                type: "curl", //动画类型（详见动画类型常量）
-                subType: "from_left", //动画子类型（详见动画子类型常量）
-                duration: 300 //动画过渡时间，默认300毫秒
-            },
-            progress: {
-                title : i18n.t('loading','加载中'),
-                text: "……",
-            },
-            leftPane: {
-                edge: api.winWidth * 0.4,
-                name: 'slider',
-                url: 'widget://template/html/slider.html'
-            }
+        api.closeToWin({
+            name: 'main'
         });
     }
 
     window.gotoMe = function(){
       api.openWin({
-        reload : true,
           name: 'me',
           url: 'widget://template/html/selfinfo.html'
       });
@@ -60,7 +44,6 @@
 
     window.gotoRevise = function(){
         api.openWin({
-            reload : true,
             name: 'revise',
             url: 'widget://template/html/revise.html'
         });
@@ -104,9 +87,6 @@
     window.gotoBack = function(){
         api.historyBack(function(ret, err) {
             if (!ret.status) {
-                if (appConfig.device) {
-                    sppUtil.disconnectDevice(appConfig.device.address);
-                }
                 api.closeWin();
             }
         });

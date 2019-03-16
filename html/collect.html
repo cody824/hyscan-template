@@ -54,171 +54,141 @@
 	var collecting = true;
 	var canBack = false;
 	var lastDatas = null;
+	var goto = false;
 
 	apiready = function() {
 		loadLocale();
-		collecting = true;
-		canBack = false;
-		lastDatas = null;
+		collecting = true;//采集中
+		canBack = false;//是否可以返回
+		lastDatas = null;//最后采集的数据
+		goto = false;//是否离开页面
 
 		api.addEventListener({
 			name: 'keyback'
 		}, function(ret, err) {
+		    console.log("keyback");
 			if (!canBack) {
-				api.toast({
-					msg: i18n.t('toast.msg.acquisitingAndDisableBack', '光谱采集中，不能返回'),
-					duration: 2000,
-					location: 'bottom'
-				});
+                api.confirm({
+                    title: i18n.t('confirm.title.notice','注意'),
+                    msg: i18n.t('confirm.msg.cancelCollect','正在采集光谱数据，确认要退出吗？'),
+                    buttons: [i18n.t('ok','确定'), i18n.t('cancel','取消')]
+                }, function(ret, err){
+                    if (ret.buttonIndex == 1) {
+                        hyCmd.lightOff(appConfig.device.address);
+                        hyCmd.stopCollect(appConfig.device.address, function(ret) {
+                            progressType == "stopCollect"
+                            canBack = true;
+                        });
+                        gotoMain();
+                    }
+                });
 			} else {
 				gotoMain();
 			}
 		});
 
-		api.addEventListener({
-			name: 'viewdisappear'
-		}, function(ret, err) {
-			setTimeout(function() {
-				console.log("Collect ok,disconnect!");
-				sppUtil.disconnectDevice(appConfig.device.address, function(ret) {});
-			}, 3000)
-		});
+		$api.attr($api.dom('#chart'), 'width', api.winWidth);
 
-		$api.attr($api.dom('.chart'), 'width', api.winWidth);
-		sppUtil.init(function(ret) {
-			progressType = "collect";
-			api.showProgress({
-				style: 'default',
-				animationType: 'fade',
-				title: i18n.t('progress.title.connecting', '连接光谱仪'),
-				text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
-				modal: false
-			});
-			sppUtil.connectDevice(appConfig.device.address, function(ret) {
-				hyCmd.receive(appConfig.device.address, {
+        sppUtil.isConnected(appConfig.device.address, function (ret) {
+            if (ret.status){
+                hyCmd.receive(appConfig.device.address, {
 
-					collect: function(datas, labels) {
-						if (progressType == "collect") {
-							api.hideProgress();
-							progressType = "";
-						}
-						lastDatas = datas;
-						initChat(datas, labels);
+                    collect: function(datas, labels) {
+                        if (progressType == "collect") {
+                            api.hideProgress();
+                            progressType = "";
+                        }
+                        lastDatas = datas;
+                        initChat(datas, labels);
                         DPTool.addData(datas);
-					},
-					collectOne : function(datas, labels){
+                    },
+                    collectOne : function(datas, labels){
+                        if (goto){
+                            return;
+						}
                         var length = DPTool.datas.length > DPTool.dataLength ? DPTool.dataLength : DPTool.datas.length;
                         $api.text($api.dom('.alreadyCollect'), length);
-						if (!DPTool.isDataOk()){
-							var now = new Date().Format("yyyy-MM-dd hh:mm:ss");
-							$api.prepend($api.dom(".collect_condition"), '<span>' + now + i18n.t('view.number', ' 第') + length + i18n.t('view.times', ' 次采集') + '</span>');
-						}
-						if (DPTool.isDataOk()){
-							api.showProgress({
-								title: i18n.t('progress.title.stopAcquisition', '采集停止中'),
-								text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
-								modal: true
-							});
-							console.log("Send stop cmd");
+                        if (!DPTool.isDataOk() && length > 0){
+                            var now = new Date().Format("yyyy-MM-dd hh:mm:ss");
+                            $api.prepend($api.dom(".collect_condition"), '<span>' + now + i18n.t('view.number', ' 第') + length + i18n.t('view.times', ' 次采集') + '</span>');
+                        }
+                        if (DPTool.isDataOk()){
+                            api.showProgress({
+                                title: i18n.t('progress.title.stopAcquisition', '采集停止中'),
+                                text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
+                                modal: true
+                            });
                             hyCmd.lightOff(appConfig.device.address);
-							hyCmd.stopCollect(appConfig.device.address, function(ret) {
-								progressType == "stopCollect"
-								canBack = true;
-							});
-							var stopI = setInterval(function() {
-								if (collecting) {
-									console.log("Re send stop cmd");
-									hyCmd.stopCollect(appConfig.device.address, function(ret) {
-										progressType == "stopCollect"
-										canBack = true;
-									});
-								} else {
-									console.log("Already stop");
-									clearInterval(stopI);
-								}
-							}, 3000);
-						} else {
-							hyCmd.collect(appConfig.device.address, function(ret, err) {
+                            hyCmd.stopCollect(appConfig.device.address, function(ret) {
+                                progressType == "stopCollect"
+                                canBack = true;
+                            });
+                            var stopI = setInterval(function() {
+                                if (collecting) {
+                                    console.log("Re send stop cmd");
+                                    hyCmd.stopCollect(appConfig.device.address, function(ret) {
+                                        progressType == "stopCollect"
+                                        canBack = true;
+                                    });
+                                } else {
+                                    console.log("Already stop");
+                                    clearInterval(stopI);
+                                }
+                            }, 5000);
+                        } else {
+                            hyCmd.collect(appConfig.device.address, function(ret, err) {
 
-							});
-						}
-					},
-					stopCollect: function() {
-						collecting = false;
-						console.log("Stop cmd ok");
-						api.hideProgress();
-						var finallyData = DPTool.getFinallyData();
-						if (finallyData) {
-							gotoResult(finallyData, DPTool.datas, DPTool.getXAxis());
-						} else {
-							api.alert({
-								title: i18n.t('alert.title.acquisitionFailed', '采集失败'),
-								msg: i18n.t('alert.msg.acquisitionFailed', '采集数据无效，请返回重试'),
-		            			buttons : [i18n.t('ok','确定')]
-							}, function() {
-								gotoMain();
-							});
-						}
-					}
-				});
-				var periodVL = appConfig.device.periodVL || appConfig.device.period || 100;
+                            });
+                        }
+                    },
+                    stopCollect: function() {
+                        collecting = false;
+                        console.log("Stop cmd ok");
+                        api.hideProgress();
+                        if (goto){
+                            return;
+                        }
+                        var finallyData = DPTool.getFinallyData();
+                        if (finallyData) {
+                            gotoResult(finallyData, DPTool.datas, DPTool.getXAxis());
+                        } else {
+                            api.alert({
+                                title: i18n.t('alert.title.acquisitionFailed', '采集失败'),
+                                msg: i18n.t('alert.msg.acquisitionFailed', '采集数据无效，请返回重试'),
+                                buttons : [i18n.t('ok','确定')]
+                            }, function() {
+                                gotoMain();
+                            });
+                        }
+                        goto = true;
+                    }
+                });
+                var periodVL = appConfig.device.periodVL || appConfig.device.period || 100;
                 var periodSW = appConfig.device.periodSW || 100;
-				console.log("Setup periodVL:" + periodVL);
+                console.log("Setup periodVL:" + periodVL);
                 console.log("Setup periodSW:" + periodSW);
                 hyCmd.period2Setup(appConfig.device.address, periodVL, periodSW);
-				setTimeout(function () {
-                    hyCmd.lightOn(appConfig.device.address);
-                    console.log("Send collect cmd");
-                    setTimeout(function () {
-                        hyCmd.collect(appConfig.device.address, function(ret) {
-                            if (!ret.status) {
-                                api.confirm({
-                                    title: i18n.t('confirm.title.cmdSendFailed', '采集指令发送失败'),
-                                    msg: i18n.t('confirm.msg.cmdSendFailed', '请检查与光谱仪连接状态，点击确定尝试重新连接'),
-                                    buttons: [i18n.t('ok','确定'), i18n.t('cancel','取消')]
-                                }, function(ret, err) {
-                                    if (ret) {
-                                        if (ret.buttonIndex == 1) {
-                                            api.showProgress({
-                                                style: 'default',
-                                                animationType: 'fade',
-                                                title: i18n.t('progress.title.connecting', '努力连接中') + "...",
-                                                text: i18n.t('progress.text.connecting', '先喝杯茶') + "...",
-                                                modal: false
-                                            });
-                                            sppUtil.disconnectDevice(appConfig.device.address, function() {
-                                                sppUtil.connectDevice(appConfig.device.address, function(ret) {
-                                                    api.hideProgress();
-                                                    var msg = "";
-                                                    if (ret.err) {
-                                                        msg =  i18n.t('toast.msg.connectFailed', '连接失败') + ret.err;
-                                                    } else {
-                                                        msg = i18n.t('toast.msg.connectSuccess', '连接成功');
-                                                        window.location.reload();
-                                                    }
-                                                    api.toast({
-                                                        msg: msg,
-                                                        duration: 2000,
-                                                        location: 'middle'
-                                                    });
-                                                });
-                                            });
-                                        }
-                                    } else {
-                                        alert(JSON.stringify(err));
-                                    }
-                                });
-                            } else {
-                                DPTool.initData();
-                                $api.text($api.dom('.needCollect'), DPTool.dataLength);
-                                $api.text($api.dom('.collect_condition'), '');
-                                $api.prepend($api.dom(".collect_condition"), '<span>' + i18n.t('view.waitDetectionResult', '等待采集结果') + '</span>');
-                            }
-                        });
-                    }, 100);
-                }, 100);
-			});
-		});
+                hyCmd.lightOn(appConfig.device.address);
+                console.log("Send collect cmd");
+                hyCmd.collect(appConfig.device.address, function(ret, err) {
+                    if (!ret.status) {
+                        alert(err.msg);
+                    } else {
+                        DPTool.initData();
+                        $api.text($api.dom('.needCollect'), DPTool.dataLength);
+                        $api.text($api.dom('.collect_condition'), '');
+                        $api.prepend($api.dom(".collect_condition"), '<span>' + i18n.t('view.waitDetectionResult', '等待采集结果') + '</span>');
+                    }
+                });
+            } else {
+                api.toast({
+                    msg: i18n.t('toast.msg.connectFailed', '连接失败'),
+                    duration: 5000,
+                    location: 'bottom'
+                });
+                gotoMain();
+			}
+		})
 	}
 
 	$api.addEvt($api.dom('.collect_stop'), 'click', function() {
@@ -237,9 +207,7 @@
                             msg: err.msg,
                             buttons : [i18n.t('ok','确定')]
                         }, function(ret, err){
-                            sppUtil.disconnectDevice(appConfig.device.address, function() {
-                                gotoMain();
-                            });
+                            gotoMain();
                         });
                     }
                 });

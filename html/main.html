@@ -3,32 +3,33 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="viewport"
+          content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
     <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
     <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <title>主界面</title>
     <script type="text/javascript" src="../../script/api.js"></script>
     <script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
-    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
-    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
     <script type="text/javascript" src="../script/lib/skin.js"></script>
     <script>
         skinUtil.loadSkin(["skin", "additional"]);
     </script>
-    <link rel="stylesheet" type="text/css" href="../css/additional.css" />
+    <link rel="stylesheet" type="text/css" href="../css/additional.css"/>
 </head>
 
 <body>
-    <div class="title">
+<div class="title">
         <span class="user_info">
-				<img src="../img/setup.png" />
+				<img src="../img/setup.png"/>
 			</span>
-        <a class="task" href="javascript:void(0);"></a>
-        <a class="local" href="javascript:void(0);" style="display: none"></a>
-        <a class="cloud" href="javascript:void(0);" style="display: none"></a>
-        <span class="appName">HyScan</span>
-    </div>
+    <a class="task" href="javascript:void(0);"></a>
+    <a class="local" href="javascript:void(0);" style="display: none"></a>
+    <a class="cloud" href="javascript:void(0);" style="display: none"></a>
+    <span class="appName">HyScan</span>
+</div>
 </body>
 
 </html>
@@ -43,27 +44,27 @@
 <script type="text/javascript">
     var map;
     var currentTasks = null;//当前的任务列表
-    var supportCloudData =  $api.getStorage("supportCloudData");
+    var supportCloudData = $api.getStorage("supportCloudData");
     if (!supportCloudData) {
         $api.css($api.dom('.local'), "display:none");
         $api.css($api.dom('.cloud'), "display:none");
         $api.rmStorage("showCloud");
     }
-    $api.addEvt($api.dom('.user_info'), 'click', function() {
+    $api.addEvt($api.dom('.user_info'), 'click', function () {
         api.openDrawerPane({
             type: 'left'
         });
     });
 
-    $api.addEvt($api.dom('.local'), 'click', function() {
+    $api.addEvt($api.dom('.local'), 'click', function () {
         $api.rmStorage("showCloud");
         updateMap();
     });
-    $api.addEvt($api.dom('.cloud'), 'click', function() {
+    $api.addEvt($api.dom('.cloud'), 'click', function () {
         $api.setStorage("showCloud", true);
         updateMap();
     });
-    $api.addEvt($api.dom('.task'), 'click', function() {
+    $api.addEvt($api.dom('.task'), 'click', function () {
         var showCloud = $api.getStorage("showCloud");
         if (showCloud) {
             gotoTask(currentTasks, true);
@@ -72,7 +73,10 @@
         }
     });
 
-    apiready = function() {
+    var connected = false;
+    var initConnect = false;
+
+    apiready = function () {
         init();//defined in app.js
 
         var appName = $api.getStorage("appName") || "HyScan";
@@ -87,135 +91,211 @@
         map = api.require('bMap');
         api.addEventListener({
             name: 'viewdisappear'
-        }, function(ret, err) {
-            map.close();
+        }, function (ret, err) {
+            // map.close();
+            if (checkFc != null){
+                clearInterval(checkFc);
+                checkFc = null;
+            }
         });
         api.addEventListener({
             name: 'getCurrentLocation'
-        }, function(ret, err){
+        }, function (ret, err) {
             map.getCurrentLocation(
-            function(ret, err) {
-                if (ret.status){
-                  map.setCenter({
-                      coords: {
-                          lon: ret.lon,
-                          lat: ret.lat
-                      },
-                      animation:true
-                  });
-                }else {
-                  api.alert({
-                      msg: i18n.t('alert.msg.locationFailed', '定位失败'),
-                      buttons : [i18n.t('ok', '确定')]
-                  });
-                }
-            });
+                function (ret, err) {
+                    if (ret.status) {
+                        map.setCenter({
+                            coords: {
+                                lon: ret.lon,
+                                lat: ret.lat
+                            },
+                            animation: true
+                        });
+                    } else {
+                        api.alert({
+                            msg: i18n.t('alert.msg.locationFailed', '定位失败'),
+                            buttons: [i18n.t('ok', '确定')]
+                        });
+                    }
+                });
         });
 
         api.addEventListener({
             name: 'zoomIn'
-        }, function(ret, err){
-           map.zoomIn();
+        }, function (ret, err) {
+            map.zoomIn();
         });
 
         api.addEventListener({
             name: 'zoomOut'
-        }, function(ret, err){
-           map.zoomOut();
+        }, function (ret, err) {
+            console.log("zoomOut");
+            map.zoomOut();
         });
 
         api.addEventListener({
-            name: 'viewappear'
-        }, function(ret, err) {
-            openMap(function() {
-                api.openFrame({
-                    name: 'bmapButton',
-                    url: 'map/collectBtn.html',
-                    rect: {
-                        x: api.frameWidth / 2 - 30,
-                        y: api.frameHeight / 5 * 4,
-                        w: 60,
-                        h: 60
-                    },
-                    bounces: false,
-                    vScrollBarEnabled: false,
-                    hScrollBarEnabled: false
-                });
-                api.openFrame({
-                    name: 'locationButton',
-                    url: 'map/locationBtn.html',
-                    rect: {
-                        x: 30,
-                        y: api.frameHeight / 8 * 7,
-                        w: 60,
-                        h: 60
-                    },
-                    bounces: false,
-                    vScrollBarEnabled: false,
-                    hScrollBarEnabled: false
-                });
-                api.openFrame({
-                    name: 'zoomButton',
-                    url: 'map/zoomBtn.html',
-                    rect: {
-                        x: api.frameWidth - 54,
-                        y: api.frameHeight / 8 * 7 - 24,
-                        w: 60,
-                        h: 60
-                    },
-                    bounces: false,
-                    vScrollBarEnabled: false,
-                    hScrollBarEnabled: false
-                });
-                map.addEventListener({
-                    name: 'viewChange'
-                }, function(ret) {
-                    if (ret.status) {
-                        $api.setStorage('lastCenter', {
-                            lon : ret.lon,
-                            lat : ret.lat
-                        });
-                        $api.setStorage('lastZoomLevel', ret.zoom);
-                        updateTaskView(map, ret.zoom, currentTasks);//更新标注
-                    }
-                });
-                map.addEventListener({
-                    name: 'click'
-                }, function(ret) {
-                    api.closeFrame({
-                        name: 'mapTaskInfo'
-                    });
-                    api.closeFrame({
-                        name: 'mapTaskList'
-                    });
-                });
-                updateMap();
+            name: 'connectOk'
+        }, function (ret, err) {
+            api.hideProgress();
+            api.toast({
+                msg: i18n.t('toast.msg.connectSuccess', '连接成功'),
+                duration: 2000,
+                location: 'bottom'
             });
+            initDevice();
+            api.closeFrame({
+                name: 'bmapConnectButton'
+            });
+            api.openFrame({
+                name: 'bmapCollectButton',
+                url: 'map/collectBtn.html',
+                rect: {
+                    x: api.frameWidth / 2 - 30,
+                    y: api.frameHeight / 5 * 4,
+                    w: 60,
+                    h: 60
+                },
+                bounces: false,
+                vScrollBarEnabled: false,
+                hScrollBarEnabled: false
+            });
+        });
+
+        api.addEventListener({
+            name: 'connectFailed'
+        }, function (ret, err) {
+            api.closeFrame({
+                name: 'bmapCollectButton'
+            });
+            api.openFrame({
+                name: 'bmapConnectButton',
+                url: 'map/connectBtn.html',
+                rect: {
+                    x: api.frameWidth / 2 - 30,
+                    y: api.frameHeight / 5 * 4,
+                    w: 60,
+                    h: 60
+                },
+                bounces: false,
+                vScrollBarEnabled: false,
+                hScrollBarEnabled: false
+            });
+        });
+
+        openMap(function () {
+            api.openFrame({
+                name: 'locationButton',
+                url: 'map/locationBtn.html',
+                rect: {
+                    x: 30,
+                    y: api.frameHeight / 8 * 7,
+                    w: 60,
+                    h: 60
+                },
+                bounces: false,
+                vScrollBarEnabled: false,
+                hScrollBarEnabled: false
+            });
+            api.openFrame({
+                name: 'zoomButton',
+                url: 'map/zoomBtn.html',
+                rect: {
+                    x: api.frameWidth - 54,
+                    y: api.frameHeight / 8 * 7 - 24,
+                    w: 60,
+                    h: 60
+                },
+                bounces: false,
+                vScrollBarEnabled: false,
+                hScrollBarEnabled: false
+            });
+
+            map.addEventListener({
+                name: 'click'
+            }, function (ret) {
+                api.closeFrame({
+                    name: 'mapTaskInfo'
+                });
+                api.closeFrame({
+                    name: 'mapTaskList'
+                });
+            });
+            updateMap();
+        });
+
+        var checkFc = null;
+
+        api.addEventListener({
+            name: 'viewappear'
+        }, function (ret, err) {
+            loadAppConfig();
+            if (appConfig.device && appConfig.device.address) {
+                checkFc = setInterval(function () {
+                    sppUtil.isConnected(appConfig.device.address, function(ret){
+                        if (!initConnect){
+                            initConnect = true;
+                            if (ret.status) {
+                                api.sendEvent({
+                                    name: 'connectOk'
+                                });
+                                connected = true;
+                            } else {
+                                api.sendEvent({
+                                    name: 'connectFailed'
+                                });
+                                connected = false;
+                            }
+                        } else {
+                            if (ret.status && !connected) {
+                                api.sendEvent({
+                                    name: 'connectOk'
+                                });
+                                connected = true;
+                            } else if (!ret.status && connected) {
+                                api.sendEvent({
+                                    name: 'connectFailed'
+                                });
+                                connected = false;
+                            }
+                        }
+                    });
+                }, 1000)
+            } else {
+                api.sendEvent({
+                    name: 'connectFailed'
+                });
+            }
+        });
+
+        map.addEventListener({
+            name: 'viewChange'
+        }, function (ret) {
+            if (ret.status) {
+                $api.setStorage('lastCenter', {
+                    lon: ret.lon,
+                    lat: ret.lat
+                });
+                $api.setStorage('lastZoomLevel', ret.zoom);
+                updateTaskView(map, ret.zoom, currentTasks);//更新标注
+            }
         });
 
         api.addEventListener({
             name: 'loadAppConfig'
-        }, function(ret, err) {
-            console.log('loadAppConfig');
+        }, function (ret, err) {
             loadAppConfig();
         });
+    }
 
-        if(appConfig.device && appConfig.device.address){
-            sppUtil.init(function(){
-                sppUtil.connectDevice(appConfig.device.address, function(ret){
-                    if (ret.status) {
-                        console.log("Init Device Config");
-                        hyCmd.lightOff(appConfig.device.address);
-                        var setGain = $api.getStorage('setGain');
-                        if (setGain){
-                            hyCmd.setGainValue1(appConfig.device.address)
-                        }
-                        hyCmd.setVoltage(appConfig.device.address, 3)
-                        sppUtil.disconnectDevice(appConfig.device.address);
-                    }
-                });
-            });
+    function initDevice() {
+        console.log("Init Device Config");
+        loadAppConfig();
+        hyCmd.lightOff(appConfig.device.address);
+        var setGain = $api.getStorage('setGain');
+        if (setGain){
+            hyCmd.setGainValue1(appConfig.device.address)
         }
+        hyCmd.setVoltage(appConfig.device.address, 3)
     }
     
     function updateMap() {
@@ -223,7 +303,7 @@
             $api.rmStorage("showCloud");
             $api.css($api.dom('.cloud'), 'display:none;');
             $api.css($api.dom('.local'), 'display:none;');
-            stTask.findTask(function(tasks) {
+            stTask.findTask(function (tasks) {
                 currentTasks = tasks;
                 updateTaskView(map, $api.getStorage("lastZoomLevel") || 13, currentTasks, true);//更新标注
             });
@@ -240,7 +320,7 @@
                 $api.css($api.dom('.local'), 'display:block;');
             }
         } else {
-            stTask.findTask(function(tasks) {
+            stTask.findTask(function (tasks) {
                 currentTasks = tasks;
                 updateTaskView(map, $api.getStorage("lastZoomLevel") || 13, currentTasks, true);//更新标注
             });
@@ -258,17 +338,17 @@
         var options = {
             rect: {
                 y: 65 //（可选项）数字类型；地图左上角的 y 坐标（相对于所属的 Window 或 Frame）；默认：0
-                    //h: 480 //（可选项）数字类型；地图的高度；默认：所属的 Window 或 Frame 的高度
+                //h: 480 //（可选项）数字类型；地图的高度；默认：所属的 Window 或 Frame 的高度
             },
             zoomLevel: lastZoomLevel,
             showUserLocation: true,
             fixedOn: api.frameName,
             fixed: true
         };
-        if (lastCenter != null){
+        if (lastCenter != null) {
             options.center = lastCenter;
         }
-        map.open(options, function(ret, err) {
+        map.open(options, function (ret, err) {
             if (ret.status) {
                 callback();
             }

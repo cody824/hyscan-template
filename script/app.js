@@ -200,7 +200,6 @@
     }
 
     window.tpaLogin = function(type, userInfo, callback){
-        console.log(JSON.stringify(userInfo));
         api.showProgress({
             title: i18n.t('progress.title.logging','登录中'),
             msg: i18n.t('progress.text.pleaseWait','请耐心等待'),
@@ -236,7 +235,6 @@
                             callback(ret, err);
                         }
                     }
-
                 })
             } else {
                 console.log(JSON.stringify(err));

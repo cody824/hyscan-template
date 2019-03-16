@@ -58,23 +58,34 @@
 	apiready = function(){
 		loadLocale();
 		dialogBox = api.require('dialogBox');
-		var headImg = null;
-		if (appConfig.user.avatar) {
-			headImg = appConfig.user.avatar;
-		} else if (appConfig.user.avatarHd) {
-			 headImg = appConfig.user.avatarHd;
-		}
-		if (headImg)
-			$api.attr($api.dom('#avatar'), 'src', headImg);
-		$api.text($api.dom('#fullName'), appConfig.user.fullName);
-		$api.text($api.dom('#mobile'), appConfig.user.mobile);
-		$api.text($api.dom('#email'), appConfig.user.email);
 
+        loadInfo();
 		api.addEventListener({
 			name: 'keyback'
 		}, function(ret, err) {
 			gotoMain();
 		});
+
+        api.addEventListener({
+            name: 'viewappear'
+        }, function (ret, err) {
+
+        });
+	}
+
+	function loadInfo(){
+        loadAppConfig();
+        var headImg = null;
+        if (appConfig.user.avatar) {
+            headImg = appConfig.user.avatar;
+        } else if (appConfig.user.avatarHd) {
+            headImg = appConfig.user.avatarHd;
+        }
+        if (headImg)
+            $api.attr($api.dom('#avatar'), 'src', headImg);
+        $api.text($api.dom('#fullName'), appConfig.user.fullName);
+        $api.text($api.dom('#mobile'), appConfig.user.mobile);
+        $api.text($api.dom('#email'), appConfig.user.email);
 	}
 
 	$api.addEvt($api.dom('#avatar'), 'click', modifyAvatar);
@@ -214,7 +225,10 @@
 		}, function(ret, err){
 			if (ret.buttonIndex == 1) {
 				logout(function(){
-					 gotoMain();
+                    api.sendEvent({
+                        name: 'userLogin'
+                    });
+                    gotoMain();
 				});
 			}
 		});

@@ -4,16 +4,28 @@
 
     var __sppUtil = {};
 
+    __sppUtil.initAndDo = function(callback){
+        spp = api.require('spputil');
+        __sppUtil.init(function (bt) {
+            if (bt.status == "poweredOn") {
+                if (typeof callback === "function") {
+                    callback();
+                }
+            } else {
+                api.alert({
+                    title : i18n.t('error', '错误'),
+                    msg: blut.show.status,
+                    buttons : [i18n.t('ok','确定')]
+                });
+            }
+        })
+    }
+
     __sppUtil.init = function(opts, callback) {
         spp = api.require('spputil');
         if (typeof opts == "function") {
             callback = opts;
-            opts = {};
         }
-        opts = opts || {}
-        var open = opts.open || false;
-
-        var me = this;
 
         __bluetooth = {};
         spp.init(function(ret) {
@@ -54,6 +66,7 @@
      */
     __sppUtil.scanDevice = function(autoStop, foundFunc) {
         console.log("Prepare to scan bluetooth");
+        spp = api.require('spputil');
         spp.scan({}, function(ret, err) {
             if (ret.status == "BLUTTOOTH_DISABLED") {
                 api.alert({
@@ -62,12 +75,12 @@
           					buttons : [i18n.t('ok','确定')]
                 });
             } else if (ret.status == "FOUND") {
-                console.log("Found device：" + ret.device);
+                console.log("Found device: " + ret.device);
                 var device = JSON.parse(ret.device);
                 if (typeof foundFunc == "function")
                     foundFunc(device);
             } else if (ret.status == "DISCOVERY_FINISHED") {
-                console.log("Scan complete，found " + ret.devicesNum);
+                console.log("Scan complete, found " + ret.devicesNum);
             } else if (ret.status == "DISCOVERY_STARTED") {
                 console.log("Begin to scan");
             }
@@ -81,6 +94,7 @@
      */
     __sppUtil.stopScanDevice = function() {
         console.log("Stop scan bluetooth");
+        spp = api.require('spputil');
         spp.stopScan();
     }
 
@@ -90,6 +104,7 @@
      * @param callback 回调
      */
     __sppUtil.disconnectDevice = function(address, callback) {
+        spp = api.require('spputil');
         spp.disconnect({
             address: address
         }, function(ret) {
@@ -105,7 +120,24 @@
      * @param callback 回调
      */
     __sppUtil.connectDevice = function(address, callback) {
+        spp = api.require('spputil');
         spp.connect({
+            address: address
+        }, function(ret, err) {
+            if (typeof callback == "function") {
+                callback(ret, err);
+            }
+        });
+    }
+
+    /**
+     * 设备是否连接
+     * @param address 设备地址
+     * @param callback 回调
+     */
+    __sppUtil.isConnected = function(address, callback) {
+        spp = api.require('spputil');
+        spp.isConnected({
             address: address
         }, function(ret, err) {
             if (typeof callback == "function") {

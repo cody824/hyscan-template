@@ -34,9 +34,39 @@ img {
 <script>
     loadLocale();
     $api.addEvt($api.dom("#gotoCollect"), 'click', function(){
-        prepareCollect({
-            0 : beginCollect,
-            2 : gotoRevise
-        });
+        loadAppConfig();
+        if (appConfig.device) {
+            sppUtil.isConnected(appConfig.device.address, function (ret) {
+                if(ret.status){
+                    if (!appConfig.device.model) {
+                        stDevice.readDeviceInfo(appConfig.device.address, function (ret) {
+                            checkDW();
+                        })
+                    } else {
+                        checkDW()
+                    }
+                } else {
+                    api.toast({
+                        msg: i18n.t('toast.msg.connectFailed', '连接失败'),
+                        duration: 5000,
+                        location: 'bottom'
+                    });
+                    api.sendEvent({
+                        name: 'connectFailed'
+                    });
+                }
+            })
+            // checkDW();
+        } else {
+            gotoScanDevice();
+        }
     });
+
+    function checkDW() {
+        if (!appConfig.device.darkCurrent || !appConfig.device.whiteboardData) {
+            gotoRevise();
+        } else {
+            beginCollect();
+        }
+    }
 </script>

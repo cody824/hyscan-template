@@ -439,7 +439,9 @@
         console.log("Battery info:" + data);
         handler = handler || function() {};
         var d = parseInt(data, 16);
-        appConfig.device.batteryInfo = d;
+        if (appConfig.device){
+            appConfig.device.batteryInfo = d;
+        }
         saveAppConfig();
         handler(data);
     }
@@ -554,9 +556,8 @@
                         });
                     } else if (deviceRet.status == 1) {
                         stDevice.readDeviceInfo(deviceRet.device.address, function() {
-                            sppUtil.disconnectDevice(deviceRet.device.address, function() {
-                                //TODO 检测定标数据
-                            });
+                            setTimeout(cbMap[1], 1000);
+
                         });
                     } else if (deviceRet.status == 2) {
                         setTimeout(cbMap[2], 1000);

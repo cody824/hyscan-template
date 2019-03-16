@@ -60,40 +60,23 @@
 
 	apiready = function() {
 		loadLocale();
-		setTimeout(function(){
-			api.showProgress({
-			    style: 'default',
-			    animationType: 'fade',
-			    title: '设备连接中...',
-			    text: '先喝杯茶...',
-			    modal: true
-			});
-			setTimeout(function(){
-				sppUtil.init(function() {
-					stDevice.isDeviceOk(function(ret) {
-						api.hideProgress();
-						if (ret.status >= 0) {
-							stDevice.readDeviceInfo(appConfig.device.address, function() {
-								updateInfo();
-								if (appConfig.device.batteryInfo <= globalConfig.batteryAlarm){
-									api.toast({
-											msg: i18n.t('toast.msg.batteryAlarm', "电量过低，请及时充电"),
-											duration: 10000,
-											location: 'top'
-									});
-								}
-							});
-						}else {
-							api.toast({
-							    msg: '设备未开启或者未绑定',
-							    duration: 2000,
-							    location: 'bottom'
-							});
-						}
-					})
-				});
-			}, 500);
-		}, 500);
+		loadAppConfig()
+		if (appConfig.device && appConfig.device.address){
+            sppUtil.isConnected(appConfig.device.address, function (ret) {
+				if (ret.status){
+                    stDevice.readDeviceInfo(appConfig.device.address, function() {
+                        updateInfo();
+                        if (appConfig.device.batteryInfo <= globalConfig.batteryAlarm){
+                            api.toast({
+                                msg: i18n.t('toast.msg.batteryAlarm', "电量过低，请及时充电"),
+                                duration: 10000,
+                                location: 'top'
+                            });
+                        }
+                    });
+				}
+            })
+		}
 		api.addEventListener({
             name: 'keyback'
         }, function(ret, err) {
@@ -109,7 +92,7 @@
 				$api.text($api.dom('.serialNum'), appConfig.device.serial);
 			if (appConfig.device.firmware)
 				$api.text($api.dom('.firmware'), appConfig.device.firmware);
-			if (appConfig.device.batteryInfo)
+			if (appConfig.device.hasOwnProperty('batteryInfo'))
 				$api.text($api.dom('.batteryInfo'), appConfig.device.batteryInfo + "%");
 		}
 	}

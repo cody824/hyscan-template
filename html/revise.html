@@ -2,53 +2,54 @@
 <html>
 
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
-	<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
-	<link rel="stylesheet" type="text/css" href="../../css/api.css" />
-	<link rel="stylesheet" type="text/css" href="../css/style.css" />
-	<script type="text/javascript" src="../script/lib/skin.js"></script>
-	<script>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <script type="text/javascript" src="../script/lib/skin.js"></script>
+    <script>
         skinUtil.loadSkin();
-	</script>
-	<title>校对</title>
+    </script>
+    <title>校对</title>
 </head>
 
 <body style="background:url(../img/main_bg.jpg) no-repeat; background-size:100%; height:100%; overflow:hidden;">
-	<div class="title">
-		<span class="skip" data-i18n="view.skip">跳过</span>
-		HyScan
-	</div>
-	<!--<div class="light">-->
-		<!--<span class="light_on">开启光源</span>-->
-		<!--<span class="light_off"><link rel="stylesheet" type="text/css" href="../css/style.css" /></span>-->
-	<!--</div>-->
+<div class="title">
+    <span class="skip" data-i18n="view.skip">跳过</span>
+    HyScan
+</div>
+<!--<div class="light">-->
+<!--<span class="light_on">开启光源</span>-->
+<!--<span class="light_off"><link rel="stylesheet" type="text/css" href="../css/style.css" /></span>-->
+<!--</div>-->
 
-	<!--状态01 暗流区-->
-	<div class="jiaodui state01">
-		<div class="check_img img01"></div>
-		<div class="jd_txt txt01">
-			<p class="jd_title" data-i18n="view.darkCurrent.title">采集暗流区</p>
-			<p class="jd_content" data-i18n="view.darkCurrent.msg">请将设备扫描口对准无光环境，您可以用不透光物体遮挡扫描口，比如用手遮挡。</p>
-		</div>
-	</div>
-	<!-- 状态02-光谱定标区 -->
-	<div class="jiaodui state02">
-		<div class="check_img img02"></div>
-		<div class="jd_txt txt02">
-			<p class="jd_title" data-i18n="view.whiteboardData.title">光谱定标</p>
-			<p class="jd_content" data-i18n="view.whiteboardData.msg">请将设备扫描口对准反光板，确保周围光源明亮，光线充足。</p>
-		</div>
-	</div>
-	<!-- 状态03 采集完毕 -->
-	<div class="jiaodui state03">
-		<div class="check_img img03"></div>
-		<div class="jd_txt txt03">
-			<p class="jd_title" data-i18n="view.reviseComplete">光谱定标设置完毕</p>
-		</div>
-	</div>
+<!--状态01 暗流区-->
+<div class="jiaodui state01">
+    <div class="check_img img01"></div>
+    <div class="jd_txt txt01">
+        <p class="jd_title" data-i18n="view.darkCurrent.title">采集暗流区</p>
+        <p class="jd_content" data-i18n="view.darkCurrent.msg">请将设备扫描口对准无光环境，您可以用不透光物体遮挡扫描口，比如用手遮挡。</p>
+    </div>
+</div>
+<!-- 状态02-光谱定标区 -->
+<div class="jiaodui state02">
+    <div class="check_img img02"></div>
+    <div class="jd_txt txt02">
+        <p class="jd_title" data-i18n="view.whiteboardData.title">光谱定标</p>
+        <p class="jd_content" data-i18n="view.whiteboardData.msg">请将设备扫描口对准反光板，确保周围光源明亮，光线充足。</p>
+    </div>
+</div>
+<!-- 状态03 采集完毕 -->
+<div class="jiaodui state03">
+    <div class="check_img img03"></div>
+    <div class="jd_txt txt03">
+        <p class="jd_title" data-i18n="view.reviseComplete">光谱定标设置完毕</p>
+    </div>
+</div>
 
-	<div class="link_btn btn02" style="margin:16% auto 0;" data-i18n="view.beginAcquisition">开始采集</div>
+<div class="link_btn btn02" style="margin:16% auto 0;" data-i18n="view.beginAcquisition">开始采集</div>
 
 
 </body>
@@ -63,170 +64,164 @@
 <script type="text/javascript" src="../script/dp.js"></script>
 <script type="text/javascript" src="../script/device.js"></script>
 <script>
-	var blankOk = false;
-	var collectIng = false;
-	var stopNum = 0;
-	var collectNum = 0;
+    var blankOk = false;
+    var collectIng = false;
+    var stopNum = 0;
+    var collectNum = 0;
 
-	$api.addEvt($api.dom('.link_btn'), 'click', function() {
-		doCollect();
-	});
+    $api.addEvt($api.dom('.link_btn'), 'click', function () {
+        doCollect();
+    });
 
-	$api.addEvt($api.dom('.skip'), 'click', function() {
-		if (collectIng) {
-			api.toast({
-					msg : i18n.t('toast.msg.acquisitingAndDisableSkip', '数据采集中不能跳过'),
-			    duration: 2000,
-			    location: 'bottom'
-			});
-			return;
-		}
-		if (blankOk) {
-			blankOk = false;
-			sppUtil.disconnectDevice(appConfig.device.address, function(ret) {
-				gotoMain();
-			});
-		} else {
-			api.toast({
-					msg : i18n.t('toast.msg.turnOnLight', '打开光源'),
-			    duration: 2000,
-			    location: 'bottom'
-			});
-			$api.css($api.dom('.state01'), 'display:none;');
-			$api.css($api.dom('.state02'), 'display:block;');
-			blankOk = true;
-			hyCmd.lightOn(appConfig.device.address);
-		}
-	});
+    $api.addEvt($api.dom('.skip'), 'click', function () {
+        if (collectIng) {
+            api.toast({
+                msg: i18n.t('toast.msg.acquisitingAndDisableSkip', '数据采集中不能跳过'),
+                duration: 2000,
+                location: 'bottom'
+            });
+            return;
+        }
+        if (blankOk) {
+            blankOk = false;
+            gotoMain();
+        } else {
+            api.toast({
+                msg: i18n.t('toast.msg.turnOnLight', '打开光源'),
+                duration: 2000,
+                location: 'bottom'
+            });
+            $api.css($api.dom('.state01'), 'display:none;');
+            $api.css($api.dom('.state02'), 'display:block;');
+            blankOk = true;
+            hyCmd.lightOn(appConfig.device.address);
+        }
+    });
 
-	$api.css($api.dom('.state01'), 'display:block;');
-	$api.css($api.dom('.state02'), 'display:none;');
-	$api.css($api.dom('.state03'), 'display:none;');
-	apiready = function() {
-		loadLocale();
-		api.addEventListener({
-			name: 'keyback'
-		}, function(ret, err) {
-			if (collectIng) {
-				api.toast({
-					msg : i18n.t('toast.msg.acquisitingAndDisableBack', '光谱采集中，不能返回'),
-					duration: 2000,
-					location: 'bottom'
-				});
-			} else {
-				sppUtil.disconnectDevice(appConfig.device.address, function(ret) {
-					gotoMain();
-				});
-			}
-		});
-        api.showProgress({
-            style: 'default',
-            animationType: 'fade',
-            title: i18n.t('progress.title.connecting', '连接光谱仪'),
-            text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
-            modal: false
+    $api.css($api.dom('.state01'), 'display:block;');
+    $api.css($api.dom('.state02'), 'display:none;');
+    $api.css($api.dom('.state03'), 'display:none;');
+    apiready = function () {
+        loadLocale();
+        api.addEventListener({
+            name: 'keyback'
+        }, function (ret, err) {
+            if (collectIng) {
+                api.confirm({
+                    title: i18n.t('confirm.title.notice','注意'),
+                    msg: i18n.t('confirm.msg.cancelCollect','正在采集光谱数据，确认要退出吗？'),
+                    buttons: [i18n.t('ok','确定'), i18n.t('cancel','取消')]
+                }, function(ret, err){
+                    if (ret.buttonIndex == 1) {
+                        hyCmd.lightOff(appConfig.device.address);
+                        hyCmd.stopCollect(appConfig.device.address, function(ret) {
+                            progressType == "stopCollect"
+                            canBack = true;
+                        });
+                        gotoMain();
+                    }
+                });
+            } else {
+                gotoMain();
+            }
         });
-		sppUtil.init(function() {
-			sppUtil.connectDevice(appConfig.device.address, function(ret) {
-				console.log(JSON.stringify(ret));
-				api.hideProgress();
-				if (ret.err) {
-					api.alert({
-						title : i18n.t('error', '错误'),
-						msg: ret.err,
-					}, function() {
-						setTimeout(gotoScanDevice, 1000);
-					});
-				} else {
-					api.toast({
-							msg :i18n.t('toast.msg.turnOffLight', '关闭光源'),
-					    duration: 2000,
-					    location: 'bottom'
-					});
+
+        api.addEventListener({
+            name: 'viewappear'
+        }, function (ret, err) {
+            loadAppConfig();
+            sppUtil.isConnected(appConfig.device.address, function (ret) {
+                if (ret.status){
+                    api.toast({
+                        msg: i18n.t('toast.msg.turnOffLight', '关闭光源'),
+                        duration: 2000,
+                        location: 'bottom'
+                    });
                     var periodVL = appConfig.device.periodVL || appConfig.device.period || 100;
                     var periodSW = appConfig.device.periodSW || 100;
                     console.log("Setup periodVL:" + periodVL);
                     console.log("Setup periodSW:" + periodSW);
                     hyCmd.period2Setup(appConfig.device.address, periodVL, periodSW);
-
-                    setTimeout(function () {
-                        hyCmd.lightOff(appConfig.device.address);
-                    }, 1000);
-
-					hyCmd.receive(appConfig.device.address, {
-						collect: saveDatas,
-						stopCollect: function() {
-							if (!collectIng || !DPTool.isDataOk()) return;
-							collectIng = false;
-							api.hideProgress();
-							var finallyData = DPTool.getFinallyData();
-							if (blankOk) {
-								appConfig.device.whiteboardData = finallyData;
-								if (appConfig.device.darkCurrent && appConfig.device.whiteboardData) {
-									var dc = [];
-									dc.push(appConfig.device.darkCurrent);
-									dc.push(appConfig.device.whiteboardData);
-									api.writeFile({
-										path: 'fs://dc/' + appConfig.device.address,
-										data: JSON.stringify(dc)
-									}, function(ret, err) {});
-								}
-								saveAppConfig();
-								// $api.attr($api.dom('.state04 img'), 'src', '../img/cj03.png');
-								$api.css($api.dom('.state03'), 'display:block;');
-								$api.css($api.dom('.state02'), 'display:none;');
-								blankOk = false;
+                    hyCmd.lightOff(appConfig.device.address);
+                    hyCmd.receive(appConfig.device.address, {
+                        collect: saveDatas,
+                        stopCollect: function () {
+                            if (!collectIng || !DPTool.isDataOk()) return;
+                            collectIng = false;
+                            api.hideProgress();
+                            var finallyData = DPTool.getFinallyData();
+                            if (blankOk) {
+                                appConfig.device.whiteboardData = finallyData;
+                                if (appConfig.device.darkCurrent && appConfig.device.whiteboardData) {
+                                    var dc = [];
+                                    dc.push(appConfig.device.darkCurrent);
+                                    dc.push(appConfig.device.whiteboardData);
+                                    api.writeFile({
+                                        path: 'fs://dc/' + appConfig.device.address,
+                                        data: JSON.stringify(dc)
+                                    }, function (ret, err) {
+                                    });
+                                }
+                                saveAppConfig();
+                                $api.css($api.dom('.state03'), 'display:block;');
+                                $api.css($api.dom('.state02'), 'display:none;');
+                                blankOk = false;
                                 hyCmd.lightOff(appConfig.device.address);
-								sppUtil.disconnectDevice(appConfig.device.address, function(ret) {
-									gotoMain();
-								});
-							} else {
-								appConfig.device.darkCurrent = finallyData;
-								saveAppConfig();
-								$api.css($api.dom('.state01'), 'display:none;');
-								$api.css($api.dom('.state02'), 'display:block;');
-								api.toast({
-										msg : i18n.t('toast.msg.turnOnLight', '打开光源'),
-								    duration: 2000,
-								    location: 'bottom'
-								});
-								hyCmd.lightOn(appConfig.device.address);
-								blankOk = true;
+                                gotoMain();
+                            } else {
+                                appConfig.device.darkCurrent = finallyData;
+                                saveAppConfig();
+                                $api.css($api.dom('.state01'), 'display:none;');
+                                $api.css($api.dom('.state02'), 'display:block;');
+                                api.toast({
+                                    msg: i18n.t('toast.msg.turnOnLight', '打开光源'),
+                                    duration: 2000,
+                                    location: 'bottom'
+                                });
+                                hyCmd.lightOn(appConfig.device.address);
+                                blankOk = true;
 
-							}
-						}
-					});
-				}
-			});
-		});
-	}
+                            }
+                        }
+                    });
+                } else {
+                    api.toast({
+                        msg: i18n.t('toast.msg.connectFailed', '连接失败'),
+                        duration: 5000,
+                        location: 'bottom'
+                    });
+                    gotoMain();
+                }
+            })
+        });
+    }
 
-	function saveDatas(datas) {
-		if (collectIng) {
-			if (collectNum++ > 10) {
+    function saveDatas(datas) {
+        if (collectIng) {
+            if (collectNum++ > 10) {
                 DPTool.addData(datas);
-			}
-			if (!DPTool.isDataOk()) {
-				return;
-			}
-		}
-		hyCmd.stopCollect(appConfig.device.address);
-	}
+            }
+            if (!DPTool.isDataOk()) {
+                return;
+            }
+        }
+        hyCmd.stopCollect(appConfig.device.address);
+    }
 
 
-	function doCollect() {
-	    if (collectIng){
-	        return;
-		}
-		DPTool.initData(10);
+    function doCollect() {
+        if (collectIng) {
+            return;
+        }
+        DPTool.initData(10);
         collectNum = 0;
-		hyCmd.collect(appConfig.device.address, function() {
-			collectIng = true;
-			api.showProgress({
-				title: i18n.t('progress.title.acquisiting', '采集中'),
-				text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
-				modal: true
-			});
-		});
-	}
+        hyCmd.collect(appConfig.device.address, function () {
+            collectIng = true;
+            api.showProgress({
+                title: i18n.t('progress.title.acquisiting', '采集中'),
+                text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
+                modal: true
+            });
+        });
+    }
 </script>

@@ -204,5 +204,7 @@
     "ret.msg.saveRemoteFailed": "保存到服务器失败",
     "ret.msg.readTaskInfoFailed": "任务信息读取失败",
     "view.dataDir" : "数据位置",
-    "view.targetType" : "目标类型"
+    "view.targetType" : "目标类型",
+    "confirm.title.notice": "注意",
+    "confirm.msg.cancelCollect": "正在采集光谱数据，确认要退出吗？"
 }
