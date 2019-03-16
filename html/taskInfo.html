@@ -210,8 +210,8 @@
             api.closeWin('taskInfo');
         });
 
-        $api.attr($api.dom('.chart'), 'width', api.winWidth);
-        $api.attr($api.dom('.chart'), 'height', api.winWidth * 2 / 3);
+        $api.attr($api.dom('#chart'), 'width', api.winWidth);
+        $api.attr($api.dom('#chart'), 'height', api.winWidth * 2 / 3);
         myChart = echarts.init(document.getElementById('chart'));
         var property = $api.attr($api.dom('.r_tab .press'), 'data-property');
 
@@ -227,7 +227,9 @@
         $api.text($api.dom('.result-time'), taskTime);
         $api.text($api.dom('.result-collectNum'), task.data.dnList.length);
         $api.text($api.dom('.result-period'), period);
-        $api.text($api.dom('.result-position'), task.position.streetName || task.position.address);
+        if (task.position){
+            $api.text($api.dom('.result-position'), task.position.streetName || task.position.address || "未知");
+		}
 
         if (task.name && task.name.length > 0) {
             $api.text($api.dom('.result-remark'), task.name);

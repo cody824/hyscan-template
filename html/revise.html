@@ -66,7 +66,6 @@
 <script>
     var blankOk = false;
     var collectIng = false;
-    var stopNum = 0;
     var collectNum = 0;
 
     $api.addEvt($api.dom('.link_btn'), 'click', function () {
@@ -115,8 +114,6 @@
                     if (ret.buttonIndex == 1) {
                         hyCmd.lightOff(appConfig.device.address);
                         hyCmd.stopCollect(appConfig.device.address, function(ret) {
-                            progressType == "stopCollect"
-                            canBack = true;
                         });
                         gotoMain();
                     }
@@ -130,6 +127,9 @@
             name: 'viewappear'
         }, function (ret, err) {
             loadAppConfig();
+            blankOk = false;
+            collectIng = false;
+            collectNum = 0;
             sppUtil.isConnected(appConfig.device.address, function (ret) {
                 if (ret.status){
                     api.toast({
