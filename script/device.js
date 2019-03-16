@@ -166,7 +166,6 @@
             var sendData = "55CC0B0011" + period1 + period2;
             var crc = getCrc(sendData);
             sendData = sendData + crc + "0000";
-            console.log("send:" + sendData);
             var spp = api.require("spputil");
             spp.send({
                 address: address,
@@ -358,6 +357,8 @@
                     returnModelInfo(data, handler.deviceInfo);
                 } else if (cmdType == "21") {
                     returnBatteryInfo(data, handler.batteryInfo);
+                } else if (cmdType == "22") {
+                    returnSetVoltage(data, handler.batteryInfo);
                 } else {
                     console.log("Unsupported cmd return:" + cmd);
                 }
@@ -446,6 +447,12 @@
         handler(data);
     }
 
+    function returnSetVoltage(data, handler) {
+        console.log("Set Voltage return:" + data);
+        handler = handler || function() {};
+        handler(data);
+    }
+
     window.spDeivceConfig = {
 
         vnir: {
@@ -502,77 +509,7 @@
             return labels;
         }
     };
-
-
     window.hyCmd = __hyCmd;
-
-
-
-
-    window.prepareCollect = function(cbMap) {
-        //检测是否绑定蓝牙设备如果绑定尝试连接设备
-        api.showProgress({
-            title : i18n.t('progress.title.scaning', '扫描设备中'),
-            text : i18n.t('progress.text.scaning', '很快的'),
-        });
-        sppUtil.init(function(blut) {
-            if (blut.status == "poweredOn") {
-                stDevice.isDeviceOk(function(deviceRet) {
-                    api.hideProgress();
-                    if (deviceRet.status == 0) {
-                        console.log("Device ok");
-                        try {
-                            if (appConfig.device.batteryInfo <= globalConfig.batteryAlarm){
-                                api.toast({
-                                    msg: i18n.t('toast.msg.batteryAlarm', "电量过低，请及时充电"),
-                                    duration: 10000,
-                                    location: 'top'
-                                });
-                            }
-                        } catch (e) {}
-                        console.log("Init Device Config before collect");
-                        hyCmd.lightOff(appConfig.device.address);
-                        var setGain = $api.getStorage('setGain');
-                        if (setGain){
-                            hyCmd.setGainValue1(appConfig.device.address)
-                        }
-                        hyCmd.setVoltage(appConfig.device.address, 3)
-                        if (cbMap && typeof cbMap[0] == "function" ){
-                            cbMap[0]();
-                        }
-                    } else if (deviceRet.status == -1) {
-                        setTimeout(gotoScanDevice, 1000);
-                    } else if (deviceRet.status == -2) {
-                        api.confirm({
-                            title : i18n.t('confirm.title.notConnected', '未能连接光谱仪'),
-                            msg : i18n.t('confirm.msg.notConnected', '连接光谱仪错误,检查设备后重新连接或者连接新设备'),
-                            buttons: [i18n.t('confirm.btns.reConnect', '重新连接'), i18n.t('confirm.btns.newDevice', '新设备')]
-                        }, function(ret, err) {
-                            if (ret.buttonIndex == 1) {
-                                prepareCollect(cbMap);
-                            } else {
-                                setTimeout(gotoScanDevice, 1000);
-                            }
-                        });
-                    } else if (deviceRet.status == 1) {
-                        stDevice.readDeviceInfo(deviceRet.device.address, function() {
-                            setTimeout(cbMap[1], 1000);
-
-                        });
-                    } else if (deviceRet.status == 2) {
-                        setTimeout(cbMap[2], 1000);
-                    }
-                });
-            } else {
-                api.hideProgress();
-                api.alert({
-                    title : i18n.t('error', '错误'),
-                    msg: blut.show.status,
-                    buttons : [i18n.t('ok','确定')]
-                });
-            }
-        });
-    }
 
     function get16LH(num) {
         var str = num.toString(16);

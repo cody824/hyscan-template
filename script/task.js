@@ -22,6 +22,17 @@
                 dnList: datas
             }
 
+            if (data.length != appDevice.darkCurrent.length || data.length != appDevice.whiteboardData.length){
+                var errorRet = {
+                    status : false,
+                    err: {
+                        msg: i18n.t('"action.return.dataLengthNotMatch"', "数据长度与定标数据不匹配，请重新进行光谱定标")
+                    }
+                };
+                if (typeof callback == "function")
+                    callback(errorRet);
+                return;
+            }
             var st = {
                 result: result,
                 position: position,
@@ -278,7 +289,10 @@
                                 status: true
                             });
                             if (task.imagePath) {
-                                stTask.sendTaskImgToRemote(task.imagePath, task.id, function(ret, err) {});
+                                stTask.sendTaskImgToRemote(task.imagePath, task.id, function(ret, err) {
+                                    console.log(JSON.stringify(ret));
+                                    console.log(JSON.stringify(err));
+                                });
                             }
                         } else {
                             var msg;

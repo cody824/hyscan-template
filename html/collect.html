@@ -66,7 +66,6 @@
 		api.addEventListener({
 			name: 'keyback'
 		}, function(ret, err) {
-		    console.log("keyback");
 			if (!canBack) {
                 api.confirm({
                     title: i18n.t('confirm.title.notice','注意'),
@@ -89,6 +88,7 @@
 
 		$api.attr($api.dom('#chart'), 'width', api.winWidth);
 
+        loadAppConfig();
         sppUtil.isConnected(appConfig.device.address, function (ret) {
             if (ret.status){
                 hyCmd.receive(appConfig.device.address, {
@@ -170,8 +170,16 @@
                 hyCmd.period2Setup(appConfig.device.address, periodVL, periodSW);
                 hyCmd.lightOn(appConfig.device.address);
                 console.log("Send collect cmd");
+                api.showProgress({
+                    title: i18n.t('progress.title.connecting', '努力连接中'),
+                    text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
+                    modal: true
+                });
+                progressType = "collect";
                 hyCmd.collect(appConfig.device.address, function(ret, err) {
                     if (!ret.status) {
+                        console.log(JSON.stringify(err));
+                        api.hideProgress();
                         alert(err.msg);
                     } else {
                         DPTool.initData();
