@@ -211,7 +211,7 @@
                 text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
                 modal: false
             });
-            stTask.getTestResult(chartData.reflectivity, function(result) {
+            stTask.getTestResult(chartData.reflectivity, appConfig.device.model, function(result) {
                 api.hideProgress();
                 inCheck = false;
                 if (result.err){

@@ -319,8 +319,8 @@
             })
         },
 
-        getTestResult: function(data, callback) {
-            var url = globalConfig.serverUrl + "app/analysis/" + appId + "?model=" + appConfig.device.model;
+        getTestResult: function(data, model, callback) {
+            var url = globalConfig.serverUrl + "app/analysis/" + appId + "?model=" + model;
             var targetType = appConfig.globalConfig.targetType || $api.getStorage("defaultTarget");
             if (targetType) {
                 url += "&target=" + targetType

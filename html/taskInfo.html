@@ -122,7 +122,7 @@
         }, function(ret, err){
             if (ret.buttonIndex == 1){
                 var reflectivity = DPTool.getReflectivity(task.data.dn, task.dc[0], task.dc[1]);
-                stTask.getTestResult(reflectivity, function(result) {
+                stTask.getTestResult(reflectivity, task.device.model, function(result) {
                     if (result.err){
                         var errorMsg = i18n.t('error.unknownError','未知错误');
                         if (typeof result.err == "string")
