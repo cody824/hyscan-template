@@ -169,41 +169,45 @@
             // rmPacketLine: DPTool.getRmPacketLine(datas)
         }
         initChat(property);
-        if (appConfig.globalConfig.collectMode) {
-            var bMap = api.require('bMap');
-            bMap.getLocation({
-                accuracy: '100m',
-                autoStop: true,
-                filter: 1
-            }, function(ret, err) {
-                if (ret.status) {
-                    position = ret;
-                    bMap.getNameFromCoords({
-                        lon: position.lon,
-                        lat: position.lat
-                    }, function(ret, err) {
-                        if (ret.status) {
-                            position.address = ret.address; //字符串类型；地址信息
-                            position.province = ret.province; //字符串类型；省份
-                            position.city = ret.city; //字符串类型；城市
-                            position.district = ret.district; //字符串类型；县区
-                            position.streetName = ret.streetName; //字符串类型；街道名
-                            position.streetNumber = ret.streetNumber;
-                            $api.text($api.dom('.result-position'), position.streetName);
-                        } else {
-                            $api.text($api.dom('.result-position'), i18n.t('view.unknownPosition', '未知地点'));
-                            console.log(JSON.stringify(err));
-                        }
-                    });
-                } else {
-                    console.log(JSON.stringify(err));
-                }
+        var bMap = api.require('bMap');
+        bMap.getLocation({
+            accuracy: '100m',
+            autoStop: true,
+            filter: 1
+        }, function(ret, err) {
+            if (ret.status) {
+                position = ret;
+                bMap.getNameFromCoords({
+                    lon: position.lon,
+                    lat: position.lat
+                }, function(ret, err) {
+                    var rp = i18n.t('view.unknownPosition', '未知地点');
+                    if (ret.status) {
+                        position.address = ret.address; //字符串类型；地址信息
+                        position.province = ret.province; //字符串类型；省份
+                        position.city = ret.city; //字符串类型；城市
+                        position.district = ret.district; //字符串类型；县区
+                        position.streetName = ret.streetName; //字符串类型；街道名
+                        position.streetNumber = ret.streetNumber;
+                        rp = position.streetName;
+                    } else {
+                        console.log(JSON.stringify(err));
+                    }
+                    if (appConfig.globalConfig.collectMode) {
+                        $api.text($api.dom('.result-position'), rp);
+                    }
+                });
+            } else {
+                console.log(JSON.stringify(err));
+            }
+            if (appConfig.globalConfig.collectMode) {
                 var now = new Date().Format('yyyy-MM-dd hh:mm:ss');
                 $api.text($api.dom('.result-time'), now);
                 $api.text($api.dom('.result-collectNum'), api.pageParam.datas.length);
-                $api.text($api.dom('.result-period'), appConfig.device.period || 100);
-            });
-        } else {
+                $api.text($api.dom('.result-period'), appConfig.device.periodVL || 100);
+            }
+        });
+        if (!appConfig.globalConfig.collectMode) {
             api.showProgress({
                 style: 'default',
                 animationType: 'fade',
