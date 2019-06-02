@@ -501,9 +501,10 @@
 						stTask.updateTaskInfo(task, function(ret, err) {
 
 						});
-						if (task.isUpload) {
-							stTask.sendTaskToRemoteById(task.id);
-						}
+                        if (task.uploadInfo && task.uploadInfo[globalConfig.serverUrl]){
+                            if (task.uploadInfo[globalConfig.serverUrl].isUpload)
+                                stTask.sendTaskToRemoteById(task.id);
+                        }
 						data.title = task.name;
 						data.imgPath = task.imagePath;
 						UIListView.updateItem({
@@ -528,35 +529,47 @@
 		});
 		for (var i = 0; i < tasks.length; i++) {
 			var task = tasks[i];
-			if (!task.isUpload) {
-				stTask.sendTaskToRemoteById(task.id, function(ret, err) {
-					if (ret.status) {
-						task.isUpload = true;
-						needUpload--;
-						if (needUpload == 0) {
-							api.hideProgress();
-							start = 0;
-							selected = [];
-							doReload(UIListView.reloadData);
-						}
-					} else {
-						api.hideProgress();
-						api.alert({
-								title: i18n.t('alert.title.uploadFailed', '上传失败'),
-								msg: err.msg,
-		            buttons : [i18n.t('ok','确定')]
-						});
-						return;
-					}
-				});
+
+			var uploadInfo = {
+                isUpload : false,
+                imageUpload: false
+			}
+
+            if (task.uploadInfo){
+                uploadInfo = task.uploadInfo[globalConfig.serverUrl] || {
+                    isUpload : false,
+                    imageUpload: false
+                }
+            }
+
+			if (uploadInfo.isUpload && uploadInfo.imageUpload) {
+                needUpload--;
+                if (needUpload == 0) {
+                    api.hideProgress();
+                    start = 0;
+                    selected = [];
+                    doReload(UIListView.reloadData);
+                }
 			} else {
-				needUpload--;
-				if (needUpload == 0) {
-					api.hideProgress();
-					start = 0;
-					selected = [];
-					doReload(UIListView.reloadData);
-				}
+                stTask.sendTaskToRemoteById(task.id, function(ret, err) {
+                    if (ret.status) {
+                        needUpload--;
+                        if (needUpload == 0) {
+                            api.hideProgress();
+                            start = 0;
+                            selected = [];
+                            doReload(UIListView.reloadData);
+                        }
+                    } else {
+                        api.hideProgress();
+                        api.alert({
+                            title: i18n.t('alert.title.uploadFailed', '上传失败'),
+                            msg: err.msg,
+                            buttons : [i18n.t('ok','确定')]
+                        });
+                        return;
+                    }
+                });
 			}
 		}
 	}

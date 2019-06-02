@@ -136,6 +136,7 @@
 			return;
 		}
 		var FNPhotograph = api.require('FNPhotograph');
+		var fs = api.require('fs');
 		FNPhotograph.open({
 			path: 'fs://task/img',
 			album: false,
@@ -143,8 +144,22 @@
 		}, function(ret) {
 			if (ret.eventType == "takePhoto") {
 				FNPhotograph.close();
-				var imagePath = ret.imagePath;
-				doSaveLocal("", imagePath);
+				if (ret.imagePath.indexOf(api.fsDir) != 0){
+                    fs.copyTo({
+                        oldPath: ret.imagePath,
+                        newPath: 'fs://task/img'
+                    }, function (fsret, err) {
+                        if (fsret.status){
+                            var imageName = ret.imagePath.substring(ret.imagePath.lastIndexOf("/") + 1);
+                            var imagePath = api.fsDir + "/task/img/" + imageName;
+                            doSaveLocal("", imagePath);
+						}
+                    });
+				} else {
+                    var imagePath = ret.imagePath;
+                    doSaveLocal("", imagePath);
+				}
+
 			}
 		});
 	});

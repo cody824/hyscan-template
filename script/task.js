@@ -278,8 +278,9 @@
                     }
                     stTask.sendTaskToRemote(appTask, function(ret, err) {
                         if (ret.id) {
-                            task.isUpload = true;
-                            stTask.updateTaskInfo(task, function(ret) {});
+                            task.uploadInfo = task.uploadInfo || {};
+                            task.uploadInfo[globalConfig.serverUrl] = task.uploadInfo[globalConfig.serverUrl] || {};
+                            task.uploadInfo[globalConfig.serverUrl].isUpload = true;
                             api.toast({
                                 msg : i18n.t('toast.msg.saveSuccess','保存成功'),
                                 duration: 2000,
@@ -290,9 +291,16 @@
                             });
                             if (task.imagePath) {
                                 stTask.sendTaskImgToRemote(task.imagePath, task.id, function(ret, err) {
+                                    if (ret){
+                                        task.uploadInfo[globalConfig.serverUrl].imageUpload = true;
+                                    }
                                     console.log(JSON.stringify(ret));
                                     console.log(JSON.stringify(err));
+                                    stTask.updateTaskInfo(task, function(ret) {});
+
                                 });
+                            } else {
+                                stTask.updateTaskInfo(task, function(ret) {});
                             }
                         } else {
                             var msg;

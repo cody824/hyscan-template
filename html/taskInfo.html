@@ -157,7 +157,6 @@
 					buttons : [i18n.t('ok','确定')]
 				});
 			} else {
-				task.isUpload = true;
 				api.toast({
 					msg: i18n.t('toast.msg.uploadSuccess', '上传成功'),
 					duration: 2000,
@@ -353,10 +352,23 @@
     }
 
     function showImg(imagePath, name){
+        if (imagePath.indexOf('file:///') == 0 && imagePath.indexOf(api.fsDir) > 0){
+            imagePath = "fs://" + imagePath.substring(imagePath.indexOf(api.fsDir) + api.fsDir.length + 1);
+		}
+        if (imagePath.indexOf("fs://") < 0 && imagePath.indexOf("http://") < 0 ){
+            api.toast({
+                msg: '无法显示图片',
+                duration: 2000,
+                location: 'bottom'
+            });
+            return;
+		}
         imgView.open({
             images: [
                 imagePath
             ],
+            activeIndex: 0,
+            mode: 2,
             bgColor: '#000'
         }, function(ret, err) {
             if (ret.eventType == "click"){
@@ -399,8 +411,11 @@
                 stTask.updateTaskInfo(task, function(ret, err){
                     if (ret.status) {
                         $api.text($api.dom('.result-remark'), task.name);
-                        if (task.isUpload)
-                            stTask.sendTaskToRemoteById(task.id);
+
+                        if (task.uploadInfo && task.uploadInfo[globalConfig.serverUrl]){
+                            if (task.uploadInfo[globalConfig.serverUrl].isUpload)
+                                stTask.sendTaskToRemoteById(task.id);
+						}
                     } else {
                         api.alert({
                             title: i18n.t('toast.msg.saveFailed', '保存失败'),
