@@ -6,6 +6,12 @@
         });
     }
 
+    window.backToTask = function(tasks, isCloud){
+        api.closeToWin({
+            name: 'tasks'
+        });
+    }
+
     window.gotoMe = function(){
       api.openWin({
           name: 'me',

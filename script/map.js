@@ -50,11 +50,11 @@
             if (length < 10) {
                 annotations[i].icon = 'widget://template/img/annotation/' + length + '.png';
             } else if (length >= 10 && length < 50) {
-                annotations[i].icon = 'widget://template/img/annotation/10+.png';
+                annotations[i].icon = 'widget://template/img/annotation/10.png';
             } else if (length >= 50 && length < 100) {
-                annotations[i].icon = 'widget://template/img/annotation/50+.png';
+                annotations[i].icon = 'widget://template/img/annotation/50.png';
             } else if (length >= 100) {
-                annotations[i].icon = 'widget://template/img/annotation/100+.png';
+                annotations[i].icon = 'widget://template/img/annotation/100.png';
             }
         }
         map.addAnnotations({

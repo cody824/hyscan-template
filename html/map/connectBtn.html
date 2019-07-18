@@ -54,40 +54,50 @@ img {
             doConnect();
         }
     }
+
+    var maxNum = 20;
+    var send = false;
     
     function doConnect() {
         sppUtil.connectDevice(appConfig.device.address, function (ret) {
-            var maxNum = 20;
-            var wc = setInterval(function () {
-                sppUtil.isConnected(appConfig.device.address, function (ret) {
-                    if (maxNum <= 0){
-                        api.hideProgress();
-                        clearInterval(wc);
-                        api.confirm({
-                            title : i18n.t('confirm.title.notConnected', '未能连接光谱仪'),
-                            msg : i18n.t('confirm.msg.notConnected', '连接光谱仪错误,检查设备后重新连接或者连接新设备'),
-                            buttons: [i18n.t('confirm.btns.newDevice', '新设备'), i18n.t('confirm.btns.reConnect', '重新连接'), i18n.t('cancel', '取消')]
-                        }, function(ret, err) {
-                            if (ret.buttonIndex == 1) {
-                                gotoScanDevice();
-                            } else if(ret.buttonIndex == 2){
-                                connectDevice();
-                            }
-                        });
-                        api.sendEvent({
-                            name: 'connectFailed'
-                        });
-                    } else if (ret.status){
-                        api.hideProgress();
-                        clearInterval(wc);
-                        api.sendEvent({
-                            name: 'connectOk'
-                        });
-                    }
-                    maxNum--;
-                })
-            }, 500);
+            maxNum = 20;
+            send = false;
+            checkConnect();
         });
+    }
+    
+    function checkConnect() {
+        sppUtil.isConnected(appConfig.device.address, function (ret) {
+            if (maxNum <= 0){
+                api.hideProgress();
+                api.confirm({
+                    title : i18n.t('confirm.title.notConnected', '未能连接光谱仪'),
+                    msg : i18n.t('confirm.msg.notConnected', '连接光谱仪错误,检查设备后重新连接或者连接新设备'),
+                    buttons: [i18n.t('confirm.btns.newDevice', '新设备'), i18n.t('confirm.btns.reConnect', '重新连接'), i18n.t('cancel', '取消')]
+                }, function(ret, err) {
+                    if (ret.buttonIndex == 1) {
+                        gotoScanDevice();
+                    } else if(ret.buttonIndex == 2){
+                        connectDevice();
+                    }
+                });
+                api.sendEvent({
+                    name: 'connectFailed'
+                });
+            } else if (ret.status){
+                api.hideProgress();
+                if (!send){
+                    send = true;
+                    api.sendEvent({
+                        name: 'connectOk'
+                    });
+                }
+                return;
+            } else {
+                maxNum--;
+                setTimeout(checkConnect, 500);
+            }
+        })
     }
     
 </script>

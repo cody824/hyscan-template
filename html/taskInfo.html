@@ -32,7 +32,7 @@
     </style>
 </head>
 
-<body style="position: relative; background:url(../img/main_bg.jpg) no-repeat; background-size:100% 100%; background-attachment: fixed;">
+<body style="position: relative; background:url(../img/main_bg.jpg) no-repeat;background-size:100% 100%; background-attachment: fixed;">
     <div class="title" style="background:none;">
 		<span class="btn_logo">
 				<img src="../img/left_arrow.png" />
@@ -170,7 +170,7 @@
         if (backWin == "main") {
             gotoMain();
         } else {
-            gotoTask(api.pageParam.tasks, api.pageParam.isCloud);
+            backToTask();
         }
 	});
 
@@ -194,7 +194,7 @@
                 if (backWin == "main") {
                     gotoMain();
                 } else {
-                    gotoTask(api.pageParam.tasks, api.pageParam.isCloud);
+                    backToTask();
                 }
             }
         });

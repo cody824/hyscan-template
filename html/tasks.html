@@ -243,6 +243,9 @@
                                         }
                                     }
                                     doReload(UIListView.reloadData);
+                                    api.sendEvent({
+                                        name: 'refreshMapTask'
+                                    });
                                 } else {
                                     api.alert({
                                         title : i18n.t('alert.title.deleteFailed','删除失败'),
@@ -390,11 +393,32 @@
 			data.imgPath = task.imagePath;
 			data.title = task.name;
 			data.subTitle = city + " " + date;
-			if (task.result) {
-				data.remark = i18n.t('UIListView.data.viewResult','查看结果');
+
+            var uploadInfo = {
+                isUpload : false,
+                imageUpload: false
+            }
+
+            if (task.uploadInfo){
+                uploadInfo = task.uploadInfo[globalConfig.serverUrl] || {
+                    isUpload : false,
+                    imageUpload: false
+                }
+            }
+
+            if (uploadInfo.isUpload && uploadInfo.imageUpload) {
+                data.remark = i18n.t('UIListView.data.allReadyUpload','已上传');
+            } else if ((uploadInfo.isUpload && !uploadInfo.imageUpload) ||
+                (!uploadInfo.isUpload && uploadInfo.imageUpload)){
+                data.remark = i18n.t('UIListView.data.allReadyUpload','未完整上传');
 			} else {
-				data.remark = i18n.t('UIListView.data.noResult','未计算结果');
-			}
+                data.remark = i18n.t('UIListView.data.allReadyUpload','未上传');
+            }
+			// if (task.result) {
+			// 	data.remark = i18n.t('UIListView.data.viewResult','查看结果');
+			// } else {
+			// 	data.remark = i18n.t('UIListView.data.noResult','未计算结果');
+			// }
 			//data.icon = "widget://template/img/level" + task.result.level + ".png";// + task.level + ".png";
 			data.task = task;
 			datas.push(data);
@@ -450,6 +474,9 @@
 						}
 					});
 				}
+                api.sendEvent({
+                    name: 'refreshMapTask'
+                });
 			}
 		});
 	}

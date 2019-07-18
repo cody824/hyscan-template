@@ -136,12 +136,6 @@
         api.addEventListener({
             name: 'connectOk'
         }, function (ret, err) {
-            api.hideProgress();
-            api.toast({
-                msg: i18n.t('toast.msg.connectSuccess', '连接成功'),
-                duration: 2000,
-                location: 'bottom'
-            });
             initDevice();
             api.closeFrame({
                 name: 'bmapConnectButton'
@@ -159,6 +153,14 @@
                 vScrollBarEnabled: false,
                 hScrollBarEnabled: false
             });
+            api.hideProgress();
+            setTimeout(function () {
+                api.toast({
+                    msg: i18n.t('toast.msg.connectSuccess', '连接成功'),
+                    duration: 2000,
+                    location: 'bottom'
+                });
+            }, 1000);
         });
 
         api.addEventListener({
@@ -284,6 +286,12 @@
             name: 'loadAppConfig'
         }, function (ret, err) {
             loadAppConfig();
+        });
+
+        api.addEventListener({
+            name: 'refreshMapTask'
+        }, function (ret, err) {
+            updateMap();
         });
     }
 

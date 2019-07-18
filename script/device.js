@@ -279,9 +279,11 @@
             if (ret.status) {
                 var data = remainData + ret.data.toLocaleUpperCase();
                 var cmds = parseCmd(data);
-                if (cmds.length == 2) {
-                    cmdHandler(cmds[0], handler);
-                    remainData = cmds[1];
+                if (cmds.length >= 2) {
+                    for (var i = 0; i < cmds.length - 1; i++){
+                        cmdHandler(cmds[i], handler);
+                    }
+                    remainData = cmds[cmds.length - 1];
                 } else {
                     remainData = cmds[0];
                 }
@@ -316,7 +318,12 @@
                 leftStr = afterCmd.substr(dataLength * 2);
                 if (reg.test(cmd)) {
                     cmds.push(cmd);
-                    cmds.push(leftStr);
+                    if (leftStr.length > 0){
+                        var cmd2 = parseCmd(leftStr);
+                        cmds = cmds.concat(cmd2);
+                    } else {
+                        cmds.push(leftStr);
+                    }
                 } else {
                     console.log("=====cmd return invalid======");
                     cmds.push(leftStr);

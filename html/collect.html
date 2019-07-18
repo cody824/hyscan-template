@@ -50,7 +50,7 @@
 <script type="text/javascript" src="../script/lib/echarts.common.min.js"></script>
 <script type="text/javascript">
 	var myChart = echarts.init(document.getElementById('chart'));
-	var progressType;
+	var progressType = "";
 	var collecting = true;
 	var canBack = false;
 	var lastDatas = null;
@@ -62,6 +62,7 @@
 		canBack = false;//是否可以返回
 		lastDatas = null;//最后采集的数据
 		goto = false;//是否离开页面
+        progressType = "";//执行类型
 
 		api.addEventListener({
 			name: 'keyback'
@@ -112,34 +113,16 @@
                             var now = new Date().Format("yyyy-MM-dd hh:mm:ss");
                             $api.prepend($api.dom(".collect_condition"), '<span>' + now + i18n.t('view.number', ' 第') + length + i18n.t('view.times', ' 次采集') + '</span>');
                         }
-                        if (DPTool.isDataOk()){
-                            api.showProgress({
-                                title: i18n.t('progress.title.stopAcquisition', '采集停止中'),
-                                text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
-                                modal: true
-                            });
-                            hyCmd.lightOff(appConfig.device.address);
-                            hyCmd.stopCollect(appConfig.device.address, function(ret) {
-                                progressType == "stopCollect"
-                                canBack = true;
-                            });
-                            var stopI = setInterval(function() {
-                                if (collecting) {
-                                    console.log("Re send stop cmd");
-                                    hyCmd.stopCollect(appConfig.device.address, function(ret) {
-                                        progressType == "stopCollect"
-                                        canBack = true;
-                                    });
-                                } else {
-                                    console.log("Already stop");
-                                    clearInterval(stopI);
-                                }
-                            }, 5000);
-                        } else {
-                            hyCmd.collect(appConfig.device.address, function(ret, err) {
+                        var stop = setInterval(function () {
+                            if (DPTool.isDataOk()){
+                                clearInterval(stop);
+                                stopCollect();
+                            } else {
+                                hyCmd.collect(appConfig.device.address, function(ret, err) {
 
-                            });
-                        }
+                                });
+							}
+                        }, 500);
                     },
                     stopCollect: function() {
                         collecting = false;
@@ -188,6 +171,46 @@
                         $api.prepend($api.dom(".collect_condition"), '<span>' + i18n.t('view.waitDetectionResult', '等待采集结果') + '</span>');
                     }
                 });
+                var retryNum = 1;
+                var retry = setInterval(function () {
+                    if (DPTool.isDataOk() || progressType == ""){
+                        clearInterval(retry);
+                    } else {
+                        console.log("retryNum:" + retryNum++);
+                        if (retryNum > 10){
+                            api.hideProgress();
+                            clearInterval(retry);
+                            hyCmd.lightOff(appConfig.device.address);
+                            hyCmd.stopCollect(appConfig.device.address, function(ret) {
+                                progressType == "stopCollect"
+                                canBack = true;
+                            });
+                            var stopI = setInterval(function() {
+                                if (collecting) {
+                                    console.log("Re send stop cmd");
+                                    hyCmd.stopCollect(appConfig.device.address, function(ret) {
+                                        progressType == "stopCollect"
+                                        canBack = true;
+                                    });
+                                } else {
+                                    console.log("Already stop");
+                                    clearInterval(stopI);
+                                }
+                            }, 5000);
+                            api.alert({
+                                title: i18n.t('alert.title.acquisitionFailed', '采集失败'),
+                                msg: i18n.t('alert.msg.acquisitionFailed1', '设备无响应，请尝试重启设备后，重新连接'),
+                                buttons : [i18n.t('ok','确定')]
+                            }, function() {
+								gotoMain();
+                            });
+						} else {
+                            hyCmd.collect(appConfig.device.address);
+						}
+					}
+                }, 2000);
+
+
             } else {
                 api.toast({
                     msg: i18n.t('toast.msg.connectFailed', '连接失败'),
@@ -200,28 +223,53 @@
 	}
 
 	$api.addEvt($api.dom('.collect_stop'), 'click', function() {
+        var length = DPTool.datas.length > DPTool.dataLength ? DPTool.dataLength : DPTool.datas.length;
+        $api.text($api.dom('.alreadyCollect'), length);
+        if (!DPTool.isDataOk() && length > 0){
+            var now = new Date().Format("yyyy-MM-dd hh:mm:ss");
+            $api.prepend($api.dom(".collect_condition"), '<span>' + now + i18n.t('view.number', ' 第') + length + i18n.t('view.times', ' 次采集') + '</span>');
+        }
 	    var stop = setInterval(function () {
 			if (DPTool.isDataOk()){
 			    clearInterval(stop);
-                api.showProgress({
-                    title: i18n.t('progress.title.stopAcquisition', '采集停止中'),
-                    text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
-                    modal: true
-                });
-                hyCmd.collectOne(appConfig.device.address, function(ret, err){
-                    if (!ret.status) {
-                        api.alert({
-                            title: i18n.t('error', '错误'),
-                            msg: err.msg,
-                            buttons : [i18n.t('ok','确定')]
-                        }, function(ret, err){
-                            gotoMain();
-                        });
-                    }
-                });
+			    stopCollect();
 			}
         }, 500);
 	});
+	
+	
+	function stopCollect() {
+        var length = DPTool.datas.length > DPTool.dataLength ? DPTool.dataLength : DPTool.datas.length;
+        $api.text($api.dom('.alreadyCollect'), length);
+        if (!DPTool.isDataOk() && length > 0){
+            var now = new Date().Format("yyyy-MM-dd hh:mm:ss");
+            $api.prepend($api.dom(".collect_condition"), '<span>' + now + i18n.t('view.number', ' 第') + length + i18n.t('view.times', ' 次采集') + '</span>');
+        }
+        if (DPTool.isDataOk()){
+            api.showProgress({
+                title: i18n.t('progress.title.stopAcquisition', '采集停止中'),
+                text: i18n.t('progress.text.pleaseWait', '请耐心等待'),
+                modal: true
+            });
+            hyCmd.lightOff(appConfig.device.address);
+            hyCmd.stopCollect(appConfig.device.address, function(ret) {
+                progressType == "stopCollect"
+                canBack = true;
+            });
+            var stopI = setInterval(function() {
+                if (collecting) {
+                    console.log("Re send stop cmd");
+                    hyCmd.stopCollect(appConfig.device.address, function(ret) {
+                        progressType == "stopCollect"
+                        canBack = true;
+                    });
+                } else {
+                    console.log("Already stop");
+                    clearInterval(stopI);
+                }
+            }, 5000);
+        }
+    }
 
 	function initChat(datas, labels) {
         wdx(datas)
