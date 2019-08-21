@@ -199,7 +199,7 @@
             var files = $api.getStorage('taskList') || [];
             var index = -1;
             for (var i = 0; i < files.length; i++) {
-                if (files[i] = task.id) {
+                if (files[i] == task.id) {
                     index = i;
                     break;
                 }
@@ -208,9 +208,6 @@
                 files.splice(index, 1);
                 $api.setStorage('taskList', files);
             }
-            callback({
-                status: true
-            })
             fs.remove({
                 path: 'fs://task/data/' + task.id
             });
@@ -225,6 +222,9 @@
                     path: task.imagePath
                 })
             }
+            callback({
+                status: true
+            })
         },
 
         sendTaskImgToRemote: function(imagePath, taskId, callback) {
