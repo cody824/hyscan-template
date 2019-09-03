@@ -51,7 +51,6 @@
         var showCloud = $api.getStorage("showCloud");
         if (showCloud) {
             stTask.getTaskFromRemote(task.id, true, function(ret) {
-                console.log(JSON.stringify(ret));
                 gotoTaskInfo(ret, "main", true);
                 api.closeFrame({
                     name: 'mapTaskInfo'

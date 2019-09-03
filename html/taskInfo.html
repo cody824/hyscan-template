@@ -114,7 +114,19 @@
             showImg(this.src, task.name);
     });
 
+    var noRemoteCheck = $api.getStorage("noRemoteCheck");
+    if (noRemoteCheck == "true"){
+        $api.css($api.dom('.check_result'), 'display:none');
+        $api.css($api.dom('.upload_task'), 'position: absolute;left:50%;margin-left: -25px;');
+	} else {
+        $api.css($api.dom('.check_result'), 'display:block');
+	}
+
     $api.addEvt($api.dom('.check_result'), 'click', function(){
+        if (appConfig.globalConfig.runModel == "input") {
+            gotoInputResult(task)
+			return;
+		}
         api.confirm({
             title : i18n.t('confirm.title.reDetection', '要重新检测数据吗？'),
     			  msg : i18n.t('confirm.msg.reDetection', '请确保网络连接畅通'),
@@ -150,7 +162,6 @@
 		stTask.sendTaskToRemoteById(task.id, function(ret, err){
 
 			if(!ret.status) {
-				console.log(JSON.stringify(err));
 				api.alert({
 					title: i18n.t('alert.title.uploadFailed', '上传失败'),
 					msg: err.msg,
@@ -206,7 +217,16 @@
         api.addEventListener({
             name: 'viewdisappear'
         }, function(ret, err) {
-            api.closeWin('taskInfo');
+            // api.closeWin('taskInfo');
+        });
+
+        api.addEventListener({
+            name: 'modifyResult'
+        }, function(ret, err) {
+            var result = ret.value.result;
+            if (result) {
+                setTestResult(result);
+			}
         });
 
         $api.attr($api.dom('#chart'), 'width', api.winWidth);
@@ -293,33 +313,47 @@
     }
 
     function setTestResult(result) {
-        if (result){
+
+        if (noRemoteCheck == "true") {
             $.remove('.taskResult');
-            var n = 0;
-            var taskResult = null;;
-            for (var i = 0; i < result.data.length; i++) {
-                if (n++ == 0) {
-                    taskResult = '<div class="taskResult">';
-                }
-                var title = result.chineseName[i];
-                var unit = result.unit[i];
-                var decimal = 2;
-                if (result.decimal) {
-                    decimal = parseInt(result.decimal[i]);
-                }
+		} else {
+            if (result){
+                $.remove('.taskResult');
+                var n = 0;
+                var taskResult = null;;
+                for (var i = 0; i < result.data.length; i++) {
+                    if (n++ == 0) {
+                        taskResult = '<div class="taskResult">';
+                    }
+                    var title = result.chineseName[i];
+                    var unit = result.unit[i];
+                    var decimal = 2;
+                    if (result.decimal) {
+                        decimal = parseInt(result.decimal[i]);
+                    }
 
-                var data = result.data[i] + "";
-                if (data.length > 6)
-                  data = data.substring(0, 6);
-                data = parseFloat(data).toFixed(decimal);
-                if (data < 0)
-        					data = i18n.t('invalid', '无效');
+                    var data = result.data[i] + "";
+                    if (data.length > 6)
+                        data = data.substring(0, 6);
+                    data = parseFloat(data).toFixed(decimal);
+                    if (data < 0)
+                        data = i18n.t('invalid', '无效');
 
-                taskResult += '<p class="collect_average"><span class="text">' + title + '</span>';
-                taskResult += '<span class="line"></span>';
-                taskResult += '<span class="special">' + data + '</span><span class="unit">' + unit + '</span></p>';
-                if (n == 4){
-                    n = 0;
+                    taskResult += '<p class="collect_average"><span class="text">' + title + '</span>';
+                    taskResult += '<span class="line"></span>';
+                    taskResult += '<span class="special">' + data + '</span><span class="unit">' + unit + '</span></p>';
+                    if (n == 4){
+                        n = 0;
+                        taskResult += "</div>";
+                        var resultList = $api.domAll(".taskResult");
+                        if (resultList.length == 0){
+                            $.prepend('.collect_ul', taskResult);
+                        } else {
+                            $api.after(resultList[resultList.length - 1], taskResult);
+                        }
+                    }
+                }
+                if (n > 0) {
                     taskResult += "</div>";
                     var resultList = $api.domAll(".taskResult");
                     if (resultList.length == 0){
@@ -329,16 +363,10 @@
                     }
                 }
             }
-            if (n > 0) {
-                taskResult += "</div>";
-                var resultList = $api.domAll(".taskResult");
-                if (resultList.length == 0){
-                    $.prepend('.collect_ul', taskResult);
-                } else {
-                    $api.after(resultList[resultList.length - 1], taskResult);
-                }
-            }
+
         }
+
+
         new Swipe(document.getElementById('slider'), {
           startSlide: 0,
           speed: 400,

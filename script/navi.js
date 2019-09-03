@@ -48,6 +48,16 @@
         });
     }
 
+    window.gotoInputResult = function(task){
+        api.openWin({
+            name: 'inputResult',
+            url: 'widget://template/html/custom-result.html',
+            pageParam: {
+                task : task,
+            }
+        });
+    }
+
     window.gotoRevise = function(){
         api.openWin({
             name: 'revise',

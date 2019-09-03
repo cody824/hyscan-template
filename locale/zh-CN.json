@@ -89,6 +89,7 @@
     "times": "次",
     "view.drSetup": "光谱定标设置",
     "view.collectMode": "采集模式",
+    "view.runMode": "运行模式",
     "view.language": "语言",
     "view.bound": "已绑定",
     "view.unbound": "未绑定",
@@ -207,5 +208,8 @@
     "view.targetType" : "目标类型",
     "confirm.title.notice": "注意",
     "confirm.msg.cancelCollect": "正在采集光谱数据，确认要退出吗？",
-    "action.return.dataLengthNotMatch": "数据长度与定标数据不匹配，请重新进行光谱定标"
+    "action.return.dataLengthNotMatch": "数据长度与定标数据不匹配，请重新进行光谱定标",
+    "mode.input": "结果模式",
+    "mode.collect": "采集模式",
+    "mode.calculate": "反演模式"
 }

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+	    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	    <title>自定义结果</title>
+		<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+		<link rel="stylesheet" type="text/css" href="../css/style.css"/>
+		<script type="text/javascript" src="../script/lib/skin.js"></script>
+		<script>
+            skinUtil.loadSkin();
+		</script>
+	</head>
+	<body>
+		<div class="title">
+			<span class="btn_logo">
+				<img src="../img/left_arrow.png" />
+			</span>
+			自定义结果
+		</div>
+		<form id="result-form">
+		<ul class="custom-box">
+			<li class="clearfix">
+				<span class="custom-name">叶绿素浓度</span>
+				<span class="custom-info">μg/L</span>
+				<input type="text" class="custom-txt">
+			</li>
+		</ul>
+		</form>
+		<div class="custom_btn">
+			保存结果
+		</div>
+		
+	</body>
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../script/lib/sameAsJq.js"></script>
+<script type="text/javascript" src="../script/app.js"></script>
+<script type="text/javascript" src="../script/locale.js"></script>
+<script type="text/javascript" src="../script/navi.js"></script>
+<script type="text/javascript" src="../script/task.js"></script>
+<script type="text/javascript">
+    var task;
+    var algos;
+
+    $api.addEvt($api.dom('.btn_logo'), 'click', function() {
+        gotoBack();
+    });
+
+    $api.addEvt($api.dom('.custom_btn'), 'click', function() {
+		var els = getElements("result-form");
+		var result = {
+			appId : $api.getStorage("appId"),
+			type: "input",
+            data: [],
+       		decimal : [],
+       		unit: [],
+     		name: [],
+        	chineseName: []
+		};
+		var datas = [];
+		for (var i = 0; i < els.length; i++){
+		    var el = els[i];
+			if (el.value.trim().length == 0){
+                api.alert({
+                    title: '注意',
+                    msg: '请输入' + el.getAttribute('viewName'),
+                }, function (ret, err) {
+
+                });
+                return;
+			}
+            try {
+				var item = algos[el.name];
+              	item.value = parseFloat(el.value);
+                datas.push(item);
+			} catch (e) {
+				console.log(e);
+            }
+		}
+		datas.sort(function (a, b) {
+		    return a.seq - b.seq;
+		});
+
+		for (var i = 0; i < datas.length; i++){
+		    var item = datas[i];
+            result.data[i] = item.value;
+            result.decimal[i] = item.decimal;
+            result.chineseName[i] = item.chineseName;
+            result.unit[i] = item.unit;
+            result.name[i] = item.key;
+		}
+        var saveTask = deepCopy(task);
+        saveTask.result = result;
+        stTask.updateTaskInfo(saveTask);
+        api.sendEvent({
+            name: 'modifyResult',
+            extra: {result: result}
+        });
+        gotoBack();
+    });
+
+    apiready = function() {
+        loadLocale();
+        loadAppConfig();
+
+		task = api.pageParam.task;
+        api.ajax({
+            url: globalConfig.serverUrl + "app/algo-config/" + $api.getStorage("appId") + "-" + task.device.model ,
+            headers : {
+                Accept : 'application/json'
+            },
+            method: 'get',
+        },function(ret, err){
+            var html = "";
+            if (ret && ret.algos) {
+                algos = ret.algos;
+				for (var key in ret.algos){
+				    html += buildInput(ret.algos[key]);
+				}
+			}
+            $api.html($api.dom(".custom-box"), html);
+        });
+    }
+    function buildInput(item) {
+        var value = "";
+        if (task.result){
+            try {
+                value = task.result.data[item.seq];  
+			}catch (e) {
+            }
+		}
+   		var html = '<li class="clearfix">' +
+            '<span class="custom-name">' + item.chineseName +'</span>' +
+			'<span class="custom-info">' + item.unit +'</span>' +
+            '<input type="number" name="' + item.key +'" viewName="' + item.chineseName + '" class="custom-txt"  value="' + value +'">' +
+            '</li>';
+   		return html;
+    }
+
+    function getElements(formId) {
+        var form = document.getElementById(formId);
+        var elements = new Array();
+        var tagElements = form.getElementsByTagName('input');
+        for (var j = 0; j < tagElements.length; j++){
+            elements.push(tagElements[j]);
+
+        }
+        return elements;
+    }
+
+    //获取单个input中的【name,value】数组
+    function inputSelector(element) {
+        if (element.checked)
+            return [element.name, element.value];
+    }
+</script>

@@ -55,8 +55,8 @@
 		</li>
 		<li class="clearfix ms" id='modeSetupLi'>
 			<span class="small-ico ico6"></span>
-			<span class="ico-name"   data-i18n="view.collectMode">采集模式</span>
-			<span class="ico-info"></span>
+			<span class="ico-name"   data-i18n="view.runMode">运行模式</span>
+			<span class="ico-info ico-info5" id="currentMode">反演模式</span>
 		</li>
 		<li class="clearfix" id='targetTypeSetupLi'>
 			<span class="small-ico ico-target"></span>
@@ -94,6 +94,7 @@
 	var dialogBox;
 	var switchBtn;
 	var languageSelector = null;
+	var modeSelector = null;
 
 	var cn = appConfig.globalConfig.collectNum || 1;
 	var serverIp = appConfig.globalConfig.serverIp || "";
@@ -107,6 +108,12 @@
 	var langShow = globalConfig.lang[lang];
 	$api.text($api.dom('#langSetupLi .ico-info5'), langShow);
 
+	var supportMode = $api.getStorage("supportMode");
+	var supportModes = supportMode.split(',');
+
+	var currentMode = appConfig.globalConfig.runModel;
+
+    $api.text($api.dom('#currentMode'), i18n.t('mode.' + currentMode, currentMode));
 
 	$api.text($api.dom('#collectNum'), cn);
 	$api.text($api.dom('#serverIp'), serverIp);
@@ -146,8 +153,8 @@
                 }
             });
 		}
-		switchBtn = api.require('UISwitchButton');
-		modeSwitch(appConfig.globalConfig.collectMode || false);
+		// switchBtn = api.require('UISwitchButton');
+		// modeSwitch(appConfig.globalConfig.collectMode || false);
 		$api.text($api.dom('.data-position'), "/UZMap/" + api.appId + "/task");
 		var defaultTarget = $api.getStorage("defaultTarget");
 		if (!defaultTarget) {
@@ -269,6 +276,79 @@
 			}
 		});
 	});
+
+	if (supportModes.length == 1){
+        $api.css($api.dom('#modeSetupLi'), 'display:none');
+	} else {
+        $api.css($api.dom('#modeSetupLi'), 'display:block');
+	}
+
+    $api.addEvt($api.dom('#modeSetupLi'), 'click', function() {
+        var datas = [];
+        for (var i = 0; i < supportModes.length; i++){
+            var key = supportModes[i];
+            var data = {name : i18n.t("mode." + key, key), value : key};
+            datas.push(data);
+        }
+        modeSelector = api.require("UIActionSelector");
+        modeSelector.open({
+            datas: datas,
+            layout: {
+                row: 4,
+                col: 1,
+                height: 40,
+                size: 12,
+                sizeActive: 14,
+                rowSpacing: 5,
+                colSpacing: 10,
+                maskBg: 'rgba(0,0,0,0.2)',
+                bg: '#fff',
+                color: '#888',
+                colorActive: '#f00',
+                colorSelected: '#f00'
+            },
+            animation: true,
+            cancel: {
+                text: i18n.t('cancel','取消'),
+                // size: 12,
+                // w: 90,
+                // h: 35,
+                // bg: '#fff',
+                bgActive: '#ccc',
+                // color: '#888',
+                colorActive: '#fff'
+            },
+            ok: {
+                text: i18n.t('ok','确定'),
+                // size: 12,
+                // w: api.winWidth/3,
+                // h: 40,
+                // bg: '#fff',
+                bgActive: '#ccc',
+                // color: '#888',
+                colorActive: '#fff'
+            },
+            title: {
+                text: i18n.t('modelSelector.title.language','请选择运行模式'),
+                // size: 12,
+                // h: 44,
+                // bg: '#eee',
+                // color: '#888'
+            },
+            fixedOn: api.frameName
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.eventType == "ok"){
+                    var select = ret.selectedInfo[0].value;
+                    appConfig.globalConfig.runModel = select;
+                    saveAppConfig();
+                    $api.text($api.dom('#currentMode'), ret.selectedInfo[0].name);
+                }
+            } else {
+                console.log(JSON.stringify(err));
+            }
+        });
+    });
 
     $api.addEvt($api.dom('#targetTypeSetupLi'), 'click', function() {
         var datas = [];

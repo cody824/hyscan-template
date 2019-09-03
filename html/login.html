@@ -61,7 +61,7 @@
 			}
 		});
 		var third = 3;
-		var qq = api.require('qq');
+		var qq = api.require('QQPlus');
 		qq.installed(function(ret, err) {
 			if (ret.status) {} else {
 				$api.css($api.dom('#qq'), 'display:none;')
@@ -156,7 +156,7 @@
 	});
 
 	$api.addEvt($api.dom("#qq"), 'click', function() {
-		var qq = api.require('qq');
+		var qq = api.require('QQPlus');
 		qq.login(function(ret, err) {
 			if (ret.status) {
 				var openId = ret.openId;

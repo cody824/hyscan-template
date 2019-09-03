@@ -127,7 +127,7 @@
 	});
 
 	$api.addEvt($api.dom('.save'), 'click', function() {
-		if (inCheck && !appConfig.globalConfig.collectMode) {
+		if (inCheck && appConfig.globalConfig.runMode == "calculate") {
 			api.toast({
 				msg: i18n.t('toast.msg.detectingSaveLater','正在检测数据，请稍后保存'),
 				duration: 2000,
@@ -208,21 +208,22 @@
                     } else {
                         console.log(JSON.stringify(err));
                     }
-                    if (appConfig.globalConfig.collectMode) {
-                        $api.text($api.dom('.result-position'), rp);
-                    }
+                    $api.text($api.dom('.result-position'), rp);
                 });
             } else {
                 console.log(JSON.stringify(err));
             }
-            if (appConfig.globalConfig.collectMode) {
+            if (appConfig.globalConfig.runModel == "input" ||
+                appConfig.globalConfig.runModel == "collect" ) {
                 var now = new Date().Format('yyyy-MM-dd hh:mm:ss');
                 $api.text($api.dom('.result-time'), now);
                 $api.text($api.dom('.result-collectNum'), api.pageParam.datas.length);
                 $api.text($api.dom('.result-period'), appConfig.device.periodVL || 100);
             }
         });
-        if (!appConfig.globalConfig.collectMode) {
+
+
+        if (appConfig.globalConfig.runModel == "calculate") {
             api.showProgress({
                 style: 'default',
                 animationType: 'fade',
@@ -306,9 +307,12 @@
 				});
 				$api.css($api.dom('.btngroup_afterSave'), 'display:block;');
 				$api.css($api.dom('.btngroup_one'), 'display:none;');
-                api.sendEvent({
-                    name: 'refreshMapTask'
-                });
+				api.sendEvent({
+					name: 'refreshMapTask'
+				});
+                if (appConfig.globalConfig.runModel == "input"){
+					window.gotoInputResult(ret.task)
+                }
 			} else {
 				api.alert({
 					title: i18n.t('toast.msg.saveFailed', '保存失败'),
@@ -324,10 +328,10 @@
 			$.remove('.result-content');
 			$.remove('.taskResult');
 			var n = 0;
-			var taskResult = null;
+			var taskResultHtml = null;
 			for (var i = 0; i < result.data.length; i++) {
 				if (n++ == 0) {
-					taskResult = '<div class="taskResult">';
+                    taskResultHtml = '<div class="taskResult">';
 				}
 
 				var title = result.chineseName[i];
@@ -342,18 +346,18 @@
 				data = parseFloat(data).toFixed(decimal);
 				if (data < 0)
 					data = "无效";
-				taskResult += '<p class="collect_average"><span class="text">' + title + '</span>';
-				taskResult += '<span class="line"></span>';
-				taskResult += '<span class="special">' + data + '</span><span class="unit">' + unit + '</span></p>';
+                taskResultHtml += '<p class="collect_average"><span class="text">' + title + '</span>';
+                taskResultHtml += '<span class="line"></span>';
+                taskResultHtml += '<span class="special">' + data + '</span><span class="unit">' + unit + '</span></p>';
 				if (n == 4){
 					n = 0;
-					taskResult += "</div>";
-					$.append('.collect_ul', taskResult);
+                    taskResultHtml += "</div>";
+					$.append('.collect_ul', taskResultHtml);
 				}
 			}
 			if (n > 0) {
-				taskResult += "</div>";
-				$.append('.collect_ul', taskResult);
+                taskResultHtml += "</div>";
+				$.append('.collect_ul', taskResultHtml);
 			}
 		}
 		new Swipe(document.getElementById('slider'), {
@@ -369,8 +373,11 @@
 	}
 	
 	function initCollectMode() {
-		if (appConfig.globalConfig.collectMode) {
-            $api.attr($api.dom('#result-title'), 'data-i18n', 'view.acquisitionData');
+        if (appConfig.globalConfig.runModel == "calculate") {
+            // $api.attr($api.dom('#result-title'), 'data-i18n', 'view.acquisitionData');
+            $api.css($api.dom('#result-list'), 'display:block');
+            $api.css($api.dom('#result-list-collect'), 'display:none');
+        } else if (appConfig.globalConfig.runModel == "input" || appConfig.globalConfig.runModel == "collect"){
             $api.css($api.dom('#result-list'), 'display:none');
             $api.css($api.dom('#result-list-collect'), 'display:block');
 		}

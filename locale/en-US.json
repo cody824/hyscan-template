@@ -90,6 +90,7 @@
     "view.timesOfAcquiring": "Times of acquiring",
     "view.drSetup": "DR setup",
     "view.collectMode": "Collect mode",
+    "view.runMode": "Run mode",
     "view.language": "Language",
     "view.bound": "Bound",
     "view.unbound": "Unbound",
@@ -209,5 +210,8 @@
     "ret.msg.saveRemoteFailed": "Save to remote Failed",
     "ret.msg.readTaskInfoFailed": "Read taskInfo failed",
     "view.dataDir" : "Data dir",
-    "view.targetType" : "Target type"
+    "view.targetType" : "Target type",
+    "mode.input": "Result Mode",
+    "mode.collect": "Collect Mode",
+    "mode.calculate": "Calculate Mode"
 }

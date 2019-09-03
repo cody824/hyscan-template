@@ -95,7 +95,6 @@
                         modal: false
                     });
                     sppUtil.connectDevice(address, function (ret, err) {
-                        console.log(JSON.stringify(ret));
                         appConfig.device = JSON.parse(ret.device);
                         if (ret.status) {
                             var maxNum = 20;
