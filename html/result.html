@@ -213,8 +213,8 @@
             } else {
                 console.log(JSON.stringify(err));
             }
-            if (appConfig.globalConfig.runModel == "input" ||
-                appConfig.globalConfig.runModel == "collect" ) {
+            if (appConfig.globalConfig.runMode == "input" ||
+                appConfig.globalConfig.runMode == "collect" ) {
                 var now = new Date().Format('yyyy-MM-dd hh:mm:ss');
                 $api.text($api.dom('.result-time'), now);
                 $api.text($api.dom('.result-collectNum'), api.pageParam.datas.length);
@@ -223,7 +223,7 @@
         });
 
 
-        if (appConfig.globalConfig.runModel == "calculate") {
+        if (appConfig.globalConfig.runMode == "calculate") {
             api.showProgress({
                 style: 'default',
                 animationType: 'fade',
@@ -310,7 +310,7 @@
 				api.sendEvent({
 					name: 'refreshMapTask'
 				});
-                if (appConfig.globalConfig.runModel == "input"){
+                if (appConfig.globalConfig.runMode == "input"){
 					window.gotoInputResult(ret.task)
                 }
 			} else {
@@ -373,11 +373,11 @@
 	}
 	
 	function initCollectMode() {
-        if (appConfig.globalConfig.runModel == "calculate") {
+        if (appConfig.globalConfig.runMode == "calculate") {
             // $api.attr($api.dom('#result-title'), 'data-i18n', 'view.acquisitionData');
             $api.css($api.dom('#result-list'), 'display:block');
             $api.css($api.dom('#result-list-collect'), 'display:none');
-        } else if (appConfig.globalConfig.runModel == "input" || appConfig.globalConfig.runModel == "collect"){
+        } else if (appConfig.globalConfig.runMode == "input" || appConfig.globalConfig.runMode == "collect"){
             $api.css($api.dom('#result-list'), 'display:none');
             $api.css($api.dom('#result-list-collect'), 'display:block');
 		}

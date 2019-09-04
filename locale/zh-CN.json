@@ -211,5 +211,11 @@
     "action.return.dataLengthNotMatch": "数据长度与定标数据不匹配，请重新进行光谱定标",
     "mode.input": "结果模式",
     "mode.collect": "采集模式",
-    "mode.calculate": "反演模式"
+    "mode.calculate": "反演模式",
+    "view.registerDevice": "注册设备",
+    "view.register": "注册",
+    "view.submitSpSetup": "提交光谱定标设置",
+    "view.submit": "提交",
+    "drSetup.system": "平台数据",
+    "drSetup.user": "采集数据"
 }

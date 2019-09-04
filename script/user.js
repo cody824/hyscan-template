@@ -35,6 +35,31 @@
                     body: user
                 }
             }, callback);
+        },
+        
+        isAdmin: function (callback) {
+            api.ajax({
+                url: globalConfig.serverUrl + "security/user/role",
+                method: 'get',
+                headers: {
+                    hytoken: 'hyscan' + appConfig.token,
+                    Accept: 'application/json'
+                }
+            }, function (ret, err) {
+                var isAdmin = false;
+                if (ret){
+                    if (ret.length > 0){
+                        for (var i = 0; i < ret.length; i++){
+                            var auth = ret[i];
+                            if (auth.authority == "ROLE_ADMIN"){
+                                isAdmin = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                callback(isAdmin);
+            });
         }
     }
     window.hyUser = __user;

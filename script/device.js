@@ -55,8 +55,8 @@
                         appConfig.device.firmware = firmware;
                         getDCRecord(address, function(ret) {
                             if (ret.status && ret.dc && ret.dc.length == 2) {
-                                appConfig.device.darkCurrent = ret.dc[0];
-                                appConfig.device.whiteboardData = ret.dc[1];
+                                appConfig.device.userDarkCurrent = ret.dc[0];
+                                appConfig.device.userWhiteboardData = ret.dc[1];
                             }
                             saveAppConfig();
                             loadAppConfig(); //读取全局配置信息
@@ -66,6 +66,48 @@
                 }
             });
             hyCmd.deviceInfo(address);
+        },
+        
+        registerDevice: function (device, callback) {
+            api.ajax({
+                url: globalConfig.serverUrl + "admin/spDevice/" + device.serial,
+                method: 'put',
+                headers: {
+                    hytoken: 'hyscan' + appConfig.token,
+                    Accept: 'application/json'
+                },
+                data: {
+                    body: device
+                }
+            }, function (ret, err) {
+                console.log(JSON.stringify(err));
+                if (!ret) {
+                    var errorMsg = {};
+                    if (isJSON(err.msg)){
+                        errorMsg = JSON.parse(err.msg);
+                    } else {
+                        errorMsg.errorMsg = err.msg;
+                    }
+                    ret = {
+                        err: errorMsg
+                    };
+                }
+                if (typeof callback == "function") {
+                    callback(ret);
+                }
+            });
+        },
+
+
+        getDeviceInfo: function (serial, callback) {
+            api.ajax({
+                url: globalConfig.serverUrl + "admin/spDevice/" + serial,
+                method: 'get',
+                headers: {
+                    hytoken: 'hyscan' + appConfig.token,
+                    Accept: 'application/json'
+                }
+            }, callback);
         }
     }
 

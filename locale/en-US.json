@@ -213,5 +213,11 @@
     "view.targetType" : "Target type",
     "mode.input": "Result Mode",
     "mode.collect": "Collect Mode",
-    "mode.calculate": "Calculate Mode"
+    "mode.calculate": "Calculate Mode",
+    "view.registerDevice": "Register Device",
+    "view.register": "Register",
+    "view.submitSpSetup": "提交光谱定标设置",
+    "view.submit": "Submit",
+    "drSetup.system": "System",
+    "drSetup.user": "User"
 }

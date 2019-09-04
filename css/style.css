@@ -549,6 +549,11 @@ input:-ms-input-placeholder { /* Internet Explorer 10+*/
 	background-size: 33px 32px;
 	background-position-y: center;
 }
+.set-box .ico-device {
+	background: url(../img/icon_device.png) no-repeat;
+	background-size: 33px 32px;
+	background-position-y: center;
+}
 .set-box .ico-name {
 	color: #333333;
 	font-weight: 500;

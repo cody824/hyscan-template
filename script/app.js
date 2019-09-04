@@ -383,3 +383,18 @@ String.prototype.endWith=function(str){
     var reg=new RegExp(str+"$");
     return reg.test(this);
 }
+function isJSON(str) {
+    if (typeof str == 'string') {
+        try {
+            var obj = JSON.parse(str);
+            if (str.indexOf('{') > -1) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (e) {
+            return false;
+        }
+    }
+    return false;
+}

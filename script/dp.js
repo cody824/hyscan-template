@@ -91,8 +91,18 @@
         },
 
         getReflectivity: function(datas, dc, wd) {
-            var dc = dc || appConfig.device.darkCurrent;
-            var wd = wd || appConfig.device.whiteboardData;
+            var drConfigMode = appConfig.device.drConfigMode || "system";
+            var defaultDc, defaultWd;
+
+            if (drConfigMode == "system") {
+                defaultDc = appConfig.device.darkCurrent || appConfig.device.userDarkCurrent;
+                defaultWd = appConfig.device.whiteboardData || appConfig.device.userWhiteboardData;
+            } else {
+                defaultDc = appConfig.device.userDarkCurrent || appConfig.device.darkCurrent;
+                defaultWd = appConfig.device.userWhiteboardData || appConfig.device.whiteboardData;
+            }
+            var dc = dc || defaultDc;
+            var wd = wd || defaultWd;
             var newData = [];
             for (i = 0; i < datas.length; i++) {
                 var data = 0;

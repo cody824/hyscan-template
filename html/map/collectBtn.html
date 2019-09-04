@@ -63,7 +63,8 @@ img {
     });
 
     function checkDW() {
-        if (!appConfig.device.darkCurrent || !appConfig.device.whiteboardData) {
+        if ((!appConfig.device.darkCurrent || !appConfig.device.whiteboardData) &&
+            (!appConfig.device.userDarkCurrent || !appConfig.device.userWhiteboardData)) {
             gotoRevise();
         } else {
             beginCollect();

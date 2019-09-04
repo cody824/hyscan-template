@@ -151,11 +151,11 @@
                             api.hideProgress();
                             var finallyData = DPTool.getFinallyData();
                             if (blankOk) {
-                                appConfig.device.whiteboardData = finallyData;
-                                if (appConfig.device.darkCurrent && appConfig.device.whiteboardData) {
+                                appConfig.device.userWhiteboardData = finallyData;
+                                if (appConfig.device.userDarkCurrent && appConfig.device.userWhiteboardData) {
                                     var dc = [];
-                                    dc.push(appConfig.device.darkCurrent);
-                                    dc.push(appConfig.device.whiteboardData);
+                                    dc.push(appConfig.device.userWhiteboardData);
+                                    dc.push(appConfig.device.userWhiteboardData);
                                     api.writeFile({
                                         path: 'fs://dc/' + appConfig.device.address,
                                         data: JSON.stringify(dc)
@@ -169,7 +169,7 @@
                                 hyCmd.lightOff(appConfig.device.address);
                                 gotoMain();
                             } else {
-                                appConfig.device.darkCurrent = finallyData;
+                                appConfig.device.userDarkCurrent = finallyData;
                                 saveAppConfig();
                                 $api.css($api.dom('.state01'), 'display:none;');
                                 $api.css($api.dom('.state02'), 'display:block;');

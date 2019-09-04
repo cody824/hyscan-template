@@ -53,6 +53,11 @@
 			<span class="ico-name"   data-i18n="view.drSetup">光谱定标设置</span>
 			<span class="ico-info"></span>
 		</li>
+		<li class="clearfix" id='spConfigSwitch'>
+			<span class="small-ico ico4"></span>
+			<span class="ico-name"   data-i18n="view.defaultDrSetup">定标数据使用</span>
+			<span class="ico-info ico-info2" id="defaultDrSetup">设备默认</span>
+		</li>
 		<li class="clearfix ms" id='modeSetupLi'>
 			<span class="small-ico ico6"></span>
 			<span class="ico-name"   data-i18n="view.runMode">运行模式</span>
@@ -73,6 +78,16 @@
 			<span class="ico-name" data-i18n="view.dataDir">数据位置</span>
 			<span class="ico-info  ico-info2 data-position" ></span>
 		</li>
+		<li class="clearfix kg" id="registerDeviceLi" style="display:none">
+			<span class="small-ico ico-device"></span>
+			<span class="ico-name" data-i18n="view.registerDevice">注册设备</span>
+			<span class="btn" data-i18n="view.register">注册</span>
+		</li>
+		<li class="clearfix kg" id="submitSpSetupLi" style="display:none">
+			<span class="small-ico ico4"></span>
+			<span class="ico-name" data-i18n="view.submitSpSetup">提交光谱定标设置</span>
+			<span class="btn" data-i18n="view.submit">提交</span>
+		</li>
 		<li class="clearfix" id='serverIpSetupLi' style="display:none;">
 			<span class="small-ico ico1"></span>
 			<span class="ico-name">服务器地址</span>
@@ -88,6 +103,7 @@
 <script type="text/javascript" src="../script/locale.js"></script>
 <script type="text/javascript" src="../script/navi.js"></script>
 <script type="text/javascript" src="../script/spp.js"></script>
+<script type="text/javascript" src="../script/user.js"></script>
 <script type="text/javascript" src="../script/device.js"></script>
 <script>
 	loadLocale();
@@ -95,6 +111,7 @@
 	var switchBtn;
 	var languageSelector = null;
 	var modeSelector = null;
+    var drSelector = null;
 
 	var cn = appConfig.globalConfig.collectNum || 1;
 	var serverIp = appConfig.globalConfig.serverIp || "";
@@ -111,9 +128,12 @@
 	var supportMode = $api.getStorage("supportMode");
 	var supportModes = supportMode.split(',');
 
-	var currentMode = appConfig.globalConfig.runModel;
+	var currentMode = appConfig.globalConfig.runMode;
 
     $api.text($api.dom('#currentMode'), i18n.t('mode.' + currentMode, currentMode));
+
+    var drConfigMode = appConfig.globalConfig.drConfigMode || "system";
+    $api.text($api.dom('#defaultDrSetup'), i18n.t('drSetup.' + drConfigMode, drConfigMode));
 
 	$api.text($api.dom('#collectNum'), cn);
 	$api.text($api.dom('#serverIp'), serverIp);
@@ -132,8 +152,18 @@
 	$api.text($api.dom('#periodVL'), devicePeriodVL);
     $api.text($api.dom('#periodSW'), devicePeriodSW);
 
+
 	apiready = function() {
 	    loadAppConfig();
+
+        hyUser.isAdmin(function (isAdmin) {
+            console.log(isAdmin);
+            if (isAdmin){
+                $api.css($api.dom("#registerDeviceLi"), 'display:block;');
+                $api.css($api.dom("#submitSpSetupLi"), 'display:block;');
+			}
+        })
+
 		dialogBox = api.require('dialogBox');
 		api.addEventListener({
 			name: 'keyback'
@@ -178,6 +208,86 @@
 	$api.addEvt($api.dom('.btn_logo'), 'click', function() {
 		gotoBack();
 	});
+
+    $api.addEvt($api.dom('#registerDeviceLi .btn'), 'click', function() {
+        if (appConfig.device){
+            var device = deepCopy(appConfig.device);
+			delete device.darkCurrent;
+			delete device.whiteboardData;
+            stDevice.registerDevice(device, function (result) {
+                if (result.err){
+                    var errorMsg = i18n.t('error.unknownError','未知错误');
+                    if (typeof result.err == "string")
+                        errorMsg = result.err;
+                    else if (result.err.errorMsg)
+                        errorMsg = result.err.errorMsg;
+                    api.toast({
+                        msg: i18n.t('toast.msg.registerFailed','注册失败') + ":" + errorMsg,
+                        duration: 2000,
+                        location: 'bottom'
+                    });
+                } else {
+                    api.toast({
+                        msg: i18n.t('toast.msg.registerSuccess','注册成功'),
+                        duration: 2000,
+                        location: 'bottom'
+                    });
+				}
+            })
+		} else {
+            api.alert({
+                title:  i18n.t('alert.title.deviceNotConnected','设备未连接'),
+                msg: i18n.t('alert.msg.pleaseConnectDevice','请连接设备'),
+                buttons : [i18n.t('ok','确定')]
+            });
+		}
+    });
+
+    $api.addEvt($api.dom('#submitSpSetupLi .btn'), 'click', function() {
+        if (appConfig.device){
+            if (!appConfig.device.userDarkCurrent || !appConfig.device.userWhiteboardData){
+                api.alert({
+                    title:  i18n.t('alert.title.noSpConfig','无定标设置'),
+                    msg: i18n.t('alert.msg.pleaseSetupFirst','请先进行定标设置'),
+                    buttons : [i18n.t('ok','确定')]
+                });
+                return;
+			} else {
+                var device = deepCopy(appConfig.device);
+                device.darkCurrent = appConfig.device.userDarkCurrent;
+                device.whiteboardData = appConfig.device.userWhiteboardData;
+                stDevice.registerDevice(device, function (result) {
+                    if (result.err){
+                        var errorMsg = i18n.t('error.unknownError','未知错误');
+                        if (typeof result.err == "string")
+                            errorMsg = result.err;
+                        else if (result.err.errorMsg)
+                            errorMsg = result.err.errorMsg;
+                        api.toast({
+                            msg: i18n.t('toast.msg.submitFailed','提交失败') + ":" + errorMsg,
+                            duration: 2000,
+                            location: 'bottom'
+                        });
+                    } else {
+                        appConfig.device.darkCurrent = appConfig.device.userDarkCurrent;
+                        appConfig.device.whiteboardData = appConfig.device.userWhiteboardData;
+						saveAppConfig();
+                        api.toast({
+                            msg: i18n.t('toast.msg.submitSuccess','提交成功'),
+                            duration: 2000,
+                            location: 'bottom'
+                        });
+                    }
+                })
+            }
+        } else {
+            api.alert({
+                title:  i18n.t('alert.title.deviceNotConnected','设备未连接'),
+                msg: i18n.t('alert.msg.pleaseConnectDevice','请连接设备'),
+                buttons : [i18n.t('ok','确定')]
+            });
+        }
+    });
 
 	$api.addEvt($api.dom('#paramSetupLi'), 'click', function() {
         if (appConfig.device && appConfig.device.address){
@@ -340,9 +450,77 @@
             if (ret) {
                 if (ret.eventType == "ok"){
                     var select = ret.selectedInfo[0].value;
-                    appConfig.globalConfig.runModel = select;
+                    appConfig.globalConfig.runMode = select;
                     saveAppConfig();
                     $api.text($api.dom('#currentMode'), ret.selectedInfo[0].name);
+                }
+            } else {
+                console.log(JSON.stringify(err));
+            }
+        });
+    });
+
+    $api.addEvt($api.dom('#spConfigSwitch'), 'click', function() {
+        var datas = [{
+            name: i18n.t("drSetup.system", "平台数据"),
+			value: 'system'
+		},{
+            name: i18n.t("drSetup.user", "采集数据"),
+            value: 'user'
+        }];
+        drSelector = api.require("UIActionSelector");
+        drSelector.open({
+            datas: datas,
+            layout: {
+                row: 4,
+                col: 1,
+                height: 40,
+                size: 12,
+                sizeActive: 14,
+                rowSpacing: 5,
+                colSpacing: 10,
+                maskBg: 'rgba(0,0,0,0.2)',
+                bg: '#fff',
+                color: '#888',
+                colorActive: '#f00',
+                colorSelected: '#f00'
+            },
+            animation: true,
+            cancel: {
+                text: i18n.t('cancel','取消'),
+                // size: 12,
+                // w: 90,
+                // h: 35,
+                // bg: '#fff',
+                bgActive: '#ccc',
+                // color: '#888',
+                colorActive: '#fff'
+            },
+            ok: {
+                text: i18n.t('ok','确定'),
+                // size: 12,
+                // w: api.winWidth/3,
+                // h: 40,
+                // bg: '#fff',
+                bgActive: '#ccc',
+                // color: '#888',
+                colorActive: '#fff'
+            },
+            title: {
+                text: i18n.t('drSelector.title.language','请选择默认定标数据'),
+                // size: 12,
+                // h: 44,
+                // bg: '#eee',
+                // color: '#888'
+            },
+            fixedOn: api.frameName
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.eventType == "ok"){
+                    var select = ret.selectedInfo[0].value;
+                    appConfig.globalConfig.drConfigMode = select;
+                    saveAppConfig();
+                    $api.text($api.dom('#defaultDrSetup'), ret.selectedInfo[0].name);
                 }
             } else {
                 console.log(JSON.stringify(err));
