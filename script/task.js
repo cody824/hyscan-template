@@ -11,18 +11,31 @@
             var now = new Date();
             var device = deepCopy(appDevice);
             var id = device.model + device.serial + dateFormat("yyyyMMddhhmmssS", now);
-            var dc = [];
-            dc[0] = appDevice.darkCurrent;
-            dc[1] = appDevice.whiteboardData;
-            delete device.darkCurrent;
-            delete device.whiteboardData;
+
 
             var saveData = {
                 dn: data,
                 dnList: datas
             }
+            var drConfigMode = appConfig.device.drConfigMode || "system";
+            var defaultDc, defaultWd;
 
-            if (data.length != appDevice.darkCurrent.length || data.length != appDevice.whiteboardData.length){
+            if (drConfigMode == "system") {
+                defaultDc = appConfig.device.darkCurrent || appConfig.device.userDarkCurrent;
+                defaultWd = appConfig.device.whiteboardData || appConfig.device.userWhiteboardData;
+            } else {
+                defaultDc = appConfig.device.userDarkCurrent || appConfig.device.darkCurrent;
+                defaultWd = appConfig.device.userWhiteboardData || appConfig.device.whiteboardData;
+            }
+
+            var dc = [];
+            dc[0] = defaultDc;
+            dc[1] = defaultWd;
+            delete device.darkCurrent;
+            delete device.whiteboardData;
+
+
+            if (data.length != defaultDc.length || data.length != defaultWd.length){
                 var errorRet = {
                     status : false,
                     err: {

@@ -126,8 +126,13 @@
                 console.log("Unsupported model：" + __appConfig.device.model);
             }
         }
-        if (!__appConfig.globalConfig.runMode){
-            var supportMode = $api.getStorage("supportMode");
+        var supportMode = $api.getStorage("supportMode");
+        if (supportMode && __appConfig.globalConfig.runMode){
+            if (supportMode.indexOf(__appConfig.globalConfig.runMode) < 0){
+                var supportModes = supportMode.split(',');
+                __appConfig.globalConfig.runMode = supportModes[0];
+            }
+        } else if (!__appConfig.globalConfig.runMode){
             if (supportMode) {
                 var supportModes = supportMode.split(',');
                 __appConfig.globalConfig.runMode = supportModes[0];
